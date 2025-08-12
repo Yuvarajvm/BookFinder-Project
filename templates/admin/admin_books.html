@@ -1,0 +1,40 @@
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<h3>Book Management</h3>
+<form method="get" class="row mb-2">
+    <div class="col-8">
+        <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Search books…">
+    </div>
+    <div class="col-4">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+</form>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Uploader</th>
+            <th>Downloads</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+        <tr>
+            <td>{{ book[1] }}</td>
+            <td>{{ book[2] }}</td>
+            <td>{{ book[8] }}</td>
+            <td>{{ book[9] }}</td>
+            <td>{{ book[6] }}</td>
+            <td>
+                <form method="post" action="{{ url_for('admin_bp.admin_delete_book', book_id=book[0]) }}" onsubmit="return confirm('Delete book?');">
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
