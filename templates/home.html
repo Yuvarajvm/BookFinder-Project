@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookFinder - Find Your Next Great Read</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Slick Carousel CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+    
     <style>
         * {
             margin: 0;
@@ -41,22 +46,32 @@
             padding: 0 2rem;
         }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #667eea;
-            transition: all 0.3s ease;
-        }
+       /* Logo styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #667eea;
+    transition: all 0.3s ease;
+}
 
-        .logo:hover {
-            transform: scale(1.05);
-            text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
+.logo-img {
+    width: 40px;
+    height: 40px;
+    transition: all 0.3s ease;
+}
 
-        .logo a {
-            text-decoration: none;
-            color: inherit;
-        }
+.logo:hover {
+    transform: scale(1.05);
+    text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.logo:hover .logo-img {
+    transform: rotate(5deg) scale(1.1);
+}
+
 
         .nav-links {
             display: flex;
@@ -80,7 +95,6 @@
             transform: translateY(-2px);
         }
 
-        /* User Info Styles */
         .user-info {
             display: flex;
             align-items: center;
@@ -230,7 +244,131 @@
             left: 100%;
         }
 
-        /* Section Styles */
+        /* Featured Books Carousel - Option 2 */
+        .featured-section {
+            background: transparent;
+            padding: 60px 0;
+            margin: 40px 0;
+        }
+
+        .featured-title {
+            text-align: center;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .featured-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            opacity: 0.8;
+        }
+
+        .carousel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .featured-books-carousel .book-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 25px;
+            margin: 0 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            height: 400px;
+            display: flex !important;
+            flex-direction: column;
+        }
+
+        .featured-books-carousel .book-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .featured-books-carousel img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .book-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            height: 50px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .book-author {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .book-description {
+            font-size: 0.85rem;
+            color: #777;
+            line-height: 1.4;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Slick arrows */
+        .slick-prev, .slick-next {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 50% !important;
+            width: 50px !important;
+            height: 50px !important;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .slick-prev:before, .slick-next:before {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .slick-prev {
+            left: -25px !important;
+        }
+
+        .slick-next {
+            right: -25px !important;
+        }
+
+        /* Slick dots */
+        .slick-dots {
+            bottom: -40px;
+        }
+
+        .slick-dots li button:before {
+            color: #667eea;
+            opacity: 0.5;
+        }
+
+        .slick-dots li.slick-active button:before {
+            opacity: 1;
+        }
+
         .section {
             max-width: 1200px;
             margin: 0 auto;
@@ -329,46 +467,6 @@
         .book-card:hover .book-icon {
             transform: scale(1.2) rotate(5deg);
             filter: drop-shadow(0 8px 20px rgba(102, 126, 234, 0.3));
-        }
-
-        .book-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 0.8rem;
-            color: #333;
-            transition: color 0.3s ease;
-            line-height: 1.3;
-        }
-
-        .book-card:hover .book-title {
-            color: #667eea;
-        }
-
-        .book-author {
-            color: #666;
-            margin-bottom: 1rem;
-            font-style: italic;
-            font-size: 1rem;
-            transition: color 0.3s ease;
-        }
-
-        .book-card:hover .book-author {
-            color: #555;
-        }
-
-        .book-description {
-            color: #555;
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            transition: color 0.3s ease;
-        }
-
-        .book-card:hover .book-description {
-            color: #444;
         }
 
         .book-meta {
@@ -541,7 +639,6 @@
             left: 100%;
         }
 
-        /* Particles */
         .particles {
             position: absolute;
             width: 100%;
@@ -560,7 +657,6 @@
             opacity: 0.7;
         }
 
-        /* Keyframe Animations */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -638,6 +734,14 @@
             .books-grid {
                 grid-template-columns: 1fr;
             }
+
+            .featured-title {
+                font-size: 2rem;
+            }
+
+            .slick-prev, .slick-next {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -646,9 +750,13 @@
     
     <header class="header">
         <div class="nav-container">
-            <div class="logo">
-                <a href="{{ url_for('home') }}">BookFinder</a>
-            </div>
+           <div class="logo">
+    <a href="{{ url_for('home') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+        <img src="/static/images/bookfinder-logo.png" alt="BookFinder Logo" class="logo-img">
+        <span>BookFinder</span>
+    </a>
+</div>
+
             <nav class="nav-links">
                 <a href="{{ url_for('home') }}">Home</a>
                 {% if session.user_id %}
@@ -673,55 +781,36 @@
             <h1>Find Your Next Great Read</h1>
             <p>Discover, share, and explore books from Google's vast library and our community</p>
             
-            <!-- Fixed search form - no login required -->
             <form action="{{ url_for('search') }}" method="GET" class="search-form" id="homeSearchForm">
                 <input type="text" name="q" placeholder="Search by title, author, or topic..." required>
                 <button type="submit" class="search-btn">Search Books</button>
-                <!-- Hidden field to indicate this is from home page -->
                 <input type="hidden" name="source" value="home">
             </form>
         </section>
 
-        <!-- Featured Books from Google Books API -->
+        <!-- Featured Books Carousel -->
         {% if google_books %}
-        <section class="section">
-            <div class="section-header">
-                <h2>Featured Books</h2>
-                <p>Discover amazing books from Google's vast library</p>
-            </div>
-            
-            <div class="books-grid">
-                {% for book in google_books %}
-                    <div class="book-card">
-                        {% if book.thumbnail %}
-                            <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="book-cover">
-                        {% else %}
-                            <div class="book-icon">📚</div>
-                        {% endif %}
-                        
-                        <div class="book-title">{{ book.title }}</div>
-                        <div class="book-author">by {{ book.author }}</div>
-                        <div class="book-description">
-                            {% if book.description|length > 120 %}
-                                {{ book.description[:120] }}...
-                            {% else %}
-                                {{ book.description }}
-                            {% endif %}
+        <section class="featured-section">
+            <div class="container">
+                <h2 class="featured-title">🌟 Featured Books</h2>
+                <p class="featured-subtitle">
+                    Discover amazing books from Google's vast library
+                </p>
+
+                <div class="carousel-container">
+                    <div class="featured-books-carousel">
+                        {% for book in google_books %}
+                        <div class="book-card">
+                            <img src="{{ book.thumbnail or '/static/images/no-cover.png' }}"
+                                 alt="{{ book.title }}"
+                                 onerror="this.src='/static/images/no-cover.png'">
+                            <div class="book-title">{{ book.title }}</div>
+                            <div class="book-author">{{ book.author }}</div>
+                            <div class="book-description">{{ book.description }}</div>
                         </div>
-                        
-                        <div class="book-meta">
-                            <span><strong>{{ book.published_date[:4] if book.published_date else 'N/A' }}</strong></span>
-                            <span>{{ book.page_count }} pages</span>
-                        </div>
-                        
-                        <div class="book-actions">
-                            {% if book.preview_link %}
-                                <a href="{{ book.preview_link }}" target="_blank" class="btn-primary">Preview</a>
-                            {% endif %}
-                            <a href="{{ book.info_link }}" target="_blank" class="btn-secondary">More Info</a>
-                        </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
+                </div>
             </div>
         </section>
         {% endif %}
@@ -762,18 +851,53 @@
         <section class="upload-section">
             <h2>No books available yet</h2>
             <p>Be the first to share a book with the community!</p>
-            {% if session.user_id %}
-                <a href="{{ url_for('upload_page') }}" class="upload-btn">Upload a Book</a>
-            {% else %}
-                <button onclick="showModal('loginModal')" class="upload-btn">Login to Upload</button>
-            {% endif %}
         </section>
         {% endif %}
     </main>
 
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    
     <script>
+        $(document).ready(function(){
+            $('.featured-books-carousel').slick({
+                infinite: true,
+                slidesToShow: 4,
+                slidesToScroll: 1,
+                autoplay: true,
+                autoplaySpeed: 3000,
+                arrows: true,
+                dots: true,
+                responsive: [
+                    {
+                        breakpoint: 1024,
+                        settings: {
+                            slidesToShow: 3,
+                            slidesToScroll: 1
+                        }
+                    },
+                    {
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: 2,
+                            slidesToScroll: 1,
+                            arrows: false
+                        }
+                    },
+                    {
+                        breakpoint: 480,
+                        settings: {
+                            slidesToShow: 1,
+                            slidesToScroll: 1,
+                            arrows: false
+                        }
+                    }
+                ]
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Create floating particles
             function createParticle() {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
@@ -787,10 +911,8 @@
                 }, 8000);
             }
 
-            // Create particles periodically
             setInterval(createParticle, 800);
 
-            // Enhanced search form - no login required for search
             const searchForm = document.getElementById('homeSearchForm');
             const searchInput = searchForm.querySelector('input[name="q"]');
             
@@ -816,17 +938,12 @@
                     return;
                 }
                 
-                // Show loading state
                 const submitBtn = this.querySelector('.search-btn');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Searching...';
                 submitBtn.style.transform = 'scale(0.95)';
-                
-                // Form will submit normally - no login check needed
-                console.log('Searching from home page - no login required');
             });
 
-            // Add tilt effect to cards
             const cards = document.querySelectorAll('.book-card');
             cards.forEach(card => {
                 card.addEventListener('mousemove', (e) => {
@@ -848,7 +965,6 @@
                 });
             });
 
-            // Share function
             window.shareBook = function(title, author) {
                 if (navigator.share) {
                     navigator.share({
@@ -864,8 +980,14 @@
                 }
             };
         });
+
+        function showModal(modalId) {
+            // Add your modal functionality here
+            console.log('Show modal:', modalId);
+        }
     </script>
 
+    <!-- Include your modals template if you have one -->
     {% include 'modals.html' %}
 </body>
 </html>
