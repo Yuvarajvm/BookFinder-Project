@@ -1194,6 +1194,9 @@
                                     <div class="book-actions">
                                         <button onclick="readBook({{ book.id }}, '{{ book.title }}', '{{ book.filename }}')" class="btn btn-read" title="Read this book online">
                                             <i class="fas fa-book-open"></i> Read
+                                          <a href="{{ url_for('read_book', book_id=book.id) }}" class="btn btn-success"></a>
+
+
                                         </button>
                                         <a href="{{ url_for('download_book', book_id=book.id) }}" class="btn btn-primary" title="Download this book">
                                             <i class="fas fa-download"></i> Download

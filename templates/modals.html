@@ -1,496 +1,446 @@
-<!-- Login Modal -->
-<div id="loginModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Login to BookFinder</h2>
-            <span class="close" onclick="closeModal('loginModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Email Address" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                
-                <!-- Forgot Password Link -->
-                <div class="form-group text-center">
-                    <a href="#" onclick="showForgotPasswordModal()" class="forgot-password-link">
-                        Forgot Password?
-                    </a>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Login</button>
-                    <button type="button" onclick="closeModal('loginModal')" class="btn-secondary">Cancel</button>
-                </div>
-                
-                <!-- ADD THIS: Sign Up Redirect Section -->
-                <div class="signup-redirect">
-                    <p>Don't have an account? 
-                        <a href="#" onclick="redirectToSignup()" class="signup-link">Create Account</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
 
-<!-- Signup Modal -->
-<div id="signupModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Create Account</h2>
-            <span class="close" onclick="closeModal('signupModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="registerForm">
-                <div class="form-group">
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Email Address" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Create Account</button>
-                    <button type="button" onclick="closeModal('signupModal')" class="btn-secondary">Cancel</button>
-                </div>
-                
-                <!-- ADD THIS: Login Redirect Section -->
-                <div class="login-redirect">
-                    <p>Already have an account? 
-                        <a href="#" onclick="redirectToLogin()" class="login-link">Sign In</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlide 0.3s ease-out;
+        }
 
-<!-- Forgot Password Modal -->
-<div id="forgotPasswordModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Reset Your Password</h2>
-            <span class="close" onclick="closeForgotPasswordModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="forgot-password-info">
-                <p>Enter your registered email address and we'll send you a reset link.</p>
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Updated close button styling to match your blue theme */
+        .close {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .close:hover {
+            background: #5046e4;
+        }
+
+        .modal-body {
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .form-links {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .form-links a {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .form-links a:hover {
+            text-decoration: underline;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #5046e4;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: #f1f3f4;
+            color: #5f6368;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .form-footer p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .success-message {
+            color: #4CAF50;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login to BookFinder</h2>
+                <button class="close" onclick="redirectToHome()">&times;</button>
             </div>
-            <form id="forgotPasswordForm">
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Enter your registered email address" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Send Reset Link</button>
-                    <button type="button" onclick="closeForgotPasswordModal()" class="btn-secondary">Cancel</button>
-                </div>
-            </form>
-            <div class="back-to-login">
-                <a href="#" onclick="backToLogin()">← Back to Login</a>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    
+                    <div class="form-links">
+                        <a href="#" onclick="showModal('forgotPasswordModal')">Forgot Password?</a>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Login</button>
+                        <button type="button" class="btn-secondary" onclick="redirectToHome()">Cancel</button>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <p>Don't have an account? <a href="#" onclick="showModal('registerModal')">Create Account</a></p>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    <form method="post" action="{{ url_for('forgot_password') }}">
-    <input type="email" name="email" required>
 
-</div>
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="close" onclick="redirectToHome()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Create Account</button>
+                        <button type="button" class="btn-secondary" onclick="redirectToHome()">Cancel</button>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <p>Already have an account? <a href="#" onclick="showModal('loginModal')">Login</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-<!-- Modal Styles -->
-<style>
-.modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reset Password</h2>
+                <button class="close" onclick="redirectToHome()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{{ url_for('forgot_password') }}">
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Enter your email address" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Send Reset Link</button>
+                        <button type="button" class="btn-secondary" onclick="redirectToHome()">Cancel</button>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <p>Remember your password? <a href="#" onclick="showModal('loginModal')">Login</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-.modal-content {
-    background-color: white;
-    padding: 0;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: modalSlideIn 0.3s ease-out;
-}
+    <script>
+        function redirectToHome() {
+            window.location.href = "/";
+        }
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+        function closeModal(modalId) {
+            var modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
 
-.modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        function showModal(modalId) {
+            // Close all modals first
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                modal.style.display = 'none';
+            });
+            
+            // Show the requested modal
+            var modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
 
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
-}
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            
+            fetch('/login', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('loginModal');
+                    // Reload page if on search results to show results
+                    if (window.location.pathname.includes('/search')) {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Login failed');
+            });
+        });
 
-.close {
-    color: #6b7280;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0;
-    background: none;
-    border: none;
-}
+        // Register form submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            
+            fetch('/register', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    showModal('loginModal');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Registration failed');
+            });
+        });
+        // CLEAR SEPARATION OF BUTTON ACTIONS
 
-.close:hover {
-    color: #374151;
-}
-
-.modal-body {
-    padding: 24px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.btn-primary {
-    flex: 1;
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-primary:hover {
-    background-color: #2563eb;
-}
-
-.btn-secondary {
-    flex: 1;
-    background-color: #f3f4f6;
-    color: #374151;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-secondary:hover {
-    background-color: #e5e7eb;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.forgot-password-link {
-    color: #3b82f6;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.forgot-password-link:hover {
-    text-decoration: underline;
-}
-
-/* NEW STYLES: Sign Up and Login Redirect Sections */
-.signup-redirect, .login-redirect {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.signup-redirect p, .login-redirect p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.signup-link, .login-link {
-    color: #3b82f6;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.signup-link:hover, .login-link:hover {
-    text-decoration: underline;
-    color: #2563eb;
-}
-
-.forgot-password-info {
-    margin-bottom: 20px;
-}
-
-.forgot-password-info p {
-    color: #6b7280;
-    font-size: 14px;
-    margin: 0;
-    line-height: 1.5;
-}
-
-.back-to-login {
-    text-align: center;
-    margin-top: 16px;
-}
-
-.back-to-login a {
-    color: #6b7280;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.back-to-login a:hover {
-    color: #374151;
-    text-decoration: underline;
-}
-
-/* Success/Error Messages */
-.message {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
-}
-
-.message.success {
-    background-color: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-
-.message.error {
-    background-color: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-</style>
-
-<!-- Modal JavaScript -->
-<script>
-// Show/Hide Modal Functions
-function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'flex';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-// NEW FUNCTIONS: Modal Redirection
-function redirectToSignup() {
-    closeModal('loginModal');
-    showModal('signupModal');
-}
-
-function redirectToLogin() {
-    closeModal('signupModal');
-    showModal('loginModal');
-}
-
-// Forgot Password Modal Functions
-function showForgotPasswordModal() {
-    closeModal('loginModal');
-    showModal('forgotPasswordModal');
-}
-
-function closeForgotPasswordModal() {
-    closeModal('forgotPasswordModal');
-}
-
-function backToLogin() {
-    closeForgotPasswordModal();
-    showModal('loginModal');
-}
-
-// Message Display Function
-function showMessage(message, type) {
-    // Remove existing messages
-    const existingMessages = document.querySelectorAll('.message');
-    existingMessages.forEach(msg => msg.remove());
+$(document).ready(function() {
+    // Remove any conflicting event handlers
+    $(document).off('click', '.modal button');
     
-    // Create new message
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    // Insert message at the top of the active modal
-    const activeModal = document.querySelector('.modal[style*="flex"]');
-    if (activeModal) {
-        const modalBody = activeModal.querySelector('.modal-body');
-        modalBody.insertBefore(messageDiv, modalBody.firstChild);
+    // LOGIN BUTTON - Only this should submit login
+    $(document).on('click', '#loginSubmitBtn', function(e) {
+        e.preventDefault();
+        console.log("Login button clicked"); // Debug
         
-        // Auto-remove success messages after 3 seconds
-        if (type === 'success') {
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 3000);
+        // Get form data
+        var email = $('input[name="email"]').val();
+        var password = $('input[name="password"]').val();
+        
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
         }
-    }
-}
-
-// Login Form Handler
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch('/login', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            setTimeout(() => {
-                closeModal('loginModal');
-                location.reload();
-            }, 1000);
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Login failed. Please try again.', 'error');
+        
+        // AJAX login call
+        $.post('/login', {
+            email: email,
+            password: password
+        })
+        .done(function(response) {
+            console.log("Login response:", response);
+            if (response.success) {
+                location.reload(); // Success - reload page
+            } else {
+                alert(response.message); // Show error
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.log("Login failed:", error);
+            alert('Login failed: ' + error);
+        });
     });
-});
-
-// Registration Form Handler
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
     
-    const formData = new FormData(this);
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirm_password');
-    
-    // Client-side password confirmation check
-    if (password !== confirmPassword) {
-        showMessage('Passwords do not match', 'error');
-        return;
-    }
-    
-    fetch('/register', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            setTimeout(() => {
-                closeModal('signupModal');
-                showModal('loginModal');
-            }, 1500);
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Registration failed. Please try again.', 'error');
+    // CLOSE BUTTON - Only this should close modal
+    $(document).on('click', '.modal-close, .close-btn, [data-dismiss="modal"]', function(e) {
+        e.preventDefault();
+        console.log("Close button clicked"); // Debug
+        $('.modal').hide();
+        // DO NOT trigger login here!
     });
-});
-
-// Forgot Password Form Handler
-document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-    e.preventDefault();
     
-    const formData = new FormData(this);
-    const email = formData.get('email');
-    
-    if (!email) {
-        showMessage('Please enter your email address', 'error');
-        return;
-    }
-    
-    fetch('/forgot-password', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            // Clear the form
-            document.getElementById('forgotPasswordForm').reset();
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Failed to process request. Please try again.', 'error');
-    });
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
+    // Modal backdrop click - close modal
+    $(document).on('click', '.modal', function(e) {
+        if (e.target === this) {
+            $(this).hide();
         }
     });
 });
 
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        const activeModal = document.querySelector('.modal[style*="flex"]');
-        if (activeModal) {
-            activeModal.style.display = 'none';
-        }
+    </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // ONLY trigger login on form submit (Login button or Enter)
+    const loginForm = document.getElementById("loginForm");
+    if (loginForm) {
+        loginForm.onsubmit = function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams(formData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(() => alert("Server error, please try again."));
+        };
     }
+
+    // Make close and cancel buttons ONLY close the modal
+    function closeLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+    }
+
+    // Bind the X (close) and Cancel buttons to only close modal
+    document.querySelectorAll('#loginModal .close, #loginModal .btn-secondary').forEach(function(btn) {
+        btn.onclick = closeLoginModal;
+    });
 });
 </script>
+</body>
+</html>

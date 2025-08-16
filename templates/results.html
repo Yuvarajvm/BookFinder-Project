@@ -4,720 +4,826 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - BookFinder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #fff; color: #333; margin: 0; line-height:1.5; }
-        .header { background: white; padding: 1rem 0; border-bottom: 1px solid #e8eaed; position: sticky; top: 0; z-index:100;}
-        .nav-container { max-width: 1200px; margin:0 auto; display:flex;justify-content:space-between;align-items:center;padding:0 2rem;}
-        .logo { font-size:1.5rem; font-weight:600; color:#667eea;}
-        .logo a {text-decoration:none; color:inherit;}
-        .nav-links { display:flex; gap:1.5rem; align-items:center;}
-        .nav-links a {text-decoration:none; color:#333; font-weight:500; padding:0.5rem 1rem; border-radius:6px; transition:background 0.2s;}
-        .nav-links a:hover { background:#f0f0f0;}
-        .user-info { display:flex; align-items:center; gap:1rem;}
-        .logout-btn { background:#f5f5f5; color:#666; border:1px solid #ddd; padding:0.4rem 0.8rem; border-radius:4px; font-size:0.9rem; cursor:pointer; text-decoration:none;}
-
-        /* ---- LOGIN BUTTON STYLE (matching your screenshot) ---- */
-        .nav-login-btn {
-            background: linear-gradient(91deg,#667eea,#5a67d8);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1.8rem;
-            border-radius: 999px;
-            font-size: 1.01rem;
-            font-weight: 600;
-            box-shadow: 0 4px 16px rgba(102,126,234,0.14);
-            cursor: pointer;
-            transition: box-shadow 0.17s, background 0.17s, color 0.13s;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .nav-login-btn:hover, .nav-login-btn:focus {
-            background: linear-gradient(98deg, #5a67d8, #667eea 80%);
-            box-shadow: 0 6px 24px rgba(102,126,234,0.18);
-            color:#fff;
-        }
-        .nav-login-btn:active {
-            background: linear-gradient(98deg, #4347bb 35%, #5a64ba 90%);
-            box-shadow: 0 2px 6px rgba(102,126,234,0.13);
-        }
-
-        .main-container { max-width:652px; margin:0 auto; padding:2rem; transition: filter 0.18s;}
-        .search-header { margin-bottom:1.5rem; }
-        .search-form { display:flex; gap:0.5rem; margin-bottom:1rem; }
-        .search-form input { flex:1; padding:0.8rem 1rem; border:1px solid #ddd; border-radius:24px; font-size:1rem; outline:none;}
-        .search-form input:focus { border-color:#667eea; box-shadow:0 1px 6px rgba(102,126,234,0.3);}
         
-        /* ---- SEARCH BUTTON UPDATED TO MATCH LOGIN BUTTON ---- */
-        .search-btn {
-            background: linear-gradient(91deg,#667eea,#5a67d8);
-            color: #fff;
-            border: none;
-            padding: 0.8rem 1.8rem;
-            border-radius: 999px;
-            font-size: 1rem;
-            font-weight: 600;
-            box-shadow: 0 4px 16px rgba(102,126,234,0.14);
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-login-btn, .logout-btn {
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             cursor: pointer;
-            transition: box-shadow 0.17s, background 0.17s, color 0.13s;
-        }
-        .search-btn:hover, .search-btn:focus {
-            background: linear-gradient(98deg, #5a67d8, #667eea 80%);
-            box-shadow: 0 6px 24px rgba(102,126,234,0.18);
-            color:#fff;
-        }
-        .search-btn:active {
-            background: linear-gradient(98deg, #4347bb 35%, #5a64ba 90%);
-            box-shadow: 0 2px 6px rgba(102,126,234,0.13);
         }
 
-        .search-meta { color:#70757a; font-size:0.95rem; margin-bottom:1.5rem; }
+        .nav-login-btn {
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
 
-        .book-result { display:flex;align-items:flex-start;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #f0f0f0;}
-        .book-result:last-child {border-bottom:none;}
-        .book-cover {width:60px;height:80px;object-fit:cover;border-radius:4px;margin-right:1rem;flex-shrink:0;}
-        .book-icon {width:60px;height:80px;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-right:1rem;flex-shrink:0;}
-        .book-content {flex:1;}
-        .book-url {display:flex;align-items:center;margin-bottom:0.3rem;}
-        .book-favicon {width:16px;height:16px;margin-right:0.5rem;border-radius:2px;}
-        .book-domain {font-size:0.8rem;color:#70757a;margin-right:0.5rem;}
-        .book-type {font-size:0.76rem;color:#70757a;background:#f8f9fa;padding:0.22rem 0.4rem;border-radius:12px;}
-        .book-title {font-size:1.25rem; color:#1a0dab; margin-bottom:0.22rem; text-decoration:none; display:block; line-height:1.3;}
-        .book-title:hover {text-decoration:underline;}
-        .book-title:visited {color:#681da8;}
-        .book-title.no-link { color:#333; cursor:default;}
-        .book-description {color:#4d5156; font-size:0.95rem; line-height:1.5;margin-bottom:0.8rem;}
-        .book-meta-row {display:flex; align-items:center; gap:1rem; font-size:0.88rem; color:#70757a; margin-bottom:0.5rem;}
-        .book-actions {display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;}
-        .action-link {color:#1a0dab;text-decoration:none;font-size:0.95rem;padding:0.33rem 0.62rem;border-radius:4px;border:1px solid #dadce0;background:#f8f9fa;transition:all 0.2s;cursor:pointer;}
-        .action-link:hover {background:#f1f3f4;}
-        .action-link.primary {background:#1a73e8;color:white;border-color:#1a73e8;}
-        .action-link.primary:hover {background:#1557b0;}
-        .action-link.read {background:#34a853;color:white;border-color:#34a853;}
-        .action-link.read:hover {background:#2d8f44;}
-        .no-results { text-align:center; padding:3rem 2rem;}
-        .no-results h2 { margin-bottom:1rem; color:#333; font-size:1.5rem;}
-        .no-results p { color:#70757a; margin-bottom:2rem; }
+        .search-section {
+            padding: 2rem 0;
+            background: transparent;
+        }
 
-        /* Blur for non-logged-in users */
-        body.modal-open .main-container { filter: blur(8px) grayscale(0.13); pointer-events: none;user-select: none; }
-        body.modal-open { overflow: hidden; }
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .search-form {
+            display: flex;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            padding: 0 1.5rem;
+            font-size: 1rem;
+            outline: none;
+            background: transparent;
+            color: #333;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 50px;
+            margin: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: scale(1.02);
+        }
+
+        /* Sort and Filter container */
+        .sort-filter-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            color: #666;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .sort-select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .sort-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Filter button matching shopping app style */
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Filter panel - overlay style like shopping apps */
+        .filter-panel {
+            position: fixed;
+            top: 200px;
+            right: 20px;
+            width: 280px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            z-index: 1111;
+            border: 1px solid #eee;
+        }
+
+        .filter-panel h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .filter-option input[type="checkbox"] {
+            accent-color: #667eea;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .filter-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .filter-reset,
+        .filter-apply {
+            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid #ddd;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .filter-apply {
+            background: #667eea;
+            color: white;
+            border: none;
+        }
+
+        .filter-reset {
+            background: white;
+            color: #666;
+        }
+
+        .filter-reset:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-apply:hover {
+            background: #5a67d8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .results-header {
+            margin-bottom: 2rem;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .book-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-thumbnail {
+            width: 120px;
+            height: 160px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .book-thumbnail-placeholder {
+            width: 120px;
+            height: 160px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .book-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .book-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2d3748;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            color: #718096;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .book-price {
+            color: #38a169;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .book-description {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .book-reviews {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .reviews-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .review-author {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        .review-text {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+
+        .book-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .book-source {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .btn-solid {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-solid:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #f7f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #718096;
+        }
+
+        .no-results h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        @media (max-width: 768px) {
+            .sort-filter-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-panel {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+
+            .book-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .book-thumbnail, .book-thumbnail-placeholder {
+                width: 100px;
+                height: 140px;
+                align-self: center;
+            }
+
+            .book-meta {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .book-actions {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
-<body{% if not session.user_id %} class="modal-open"{% endif %}>
-<header class="header">
-    <div class="nav-container">
-        <div class="logo">
-            <a href="{{ url_for('home') }}">BookFinder</a>
-        </div>
-        <nav class="nav-links">
-            <a href="{{ url_for('home') }}">Home</a>
-            {% if session.user_id %}
-                <a href="{{ url_for('my_books') }}">My Books</a>
-            {% endif %}
-            <a href="{{ url_for('contact') }}">Contact</a>
-            {% if session.user_id %}
-                <div class="user-info">
-                    <span>Welcome, {{ session.username }}!</span>
-                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-                </div>
-            {% else %}
-                <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
-            {% endif %}
-        </nav>
-    </div>
-</header>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <img src="/static/images/bookfinder-logo.png" alt="BookFinder" class="logo-img">
+                    <span>BookFinder</span>
+                </a>
+            </div>
 
-<main class="main-container">
-    <div class="search-header">
-        <form action="{{ url_for('search') }}" method="get" class="search-form">
-            <input type="text" name="q" placeholder="Search books..." value="{{ query }}" required>
-            <button type="submit" class="search-btn">Search</button>
-        </form>
-        {% if query %}
-            <div class="search-meta">
-                {% if results %}
-                    About {{ results|length }} results for "{{ query }}"
-                {% else %}
-                    No results found for "{{ query }}"
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('my_books') }}">My Books</a>
                 {% endif %}
+                <a href="{{ url_for('contact') }}">Contact</a>
+
+                {% if session.user_id %}
+                    <span style="color:#555">Welcome, {{ session.username }}!</span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                {% else %}
+                    <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="search-section">
+        <div class="search-container">
+            <form action="{{ url_for('search') }}" method="GET" class="search-form">
+                <input type="text" name="q" placeholder="Search books..." class="search-input" value="{{ query or '' }}">
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+
+            <!-- Sort and Filter container - matching shopping app style -->
+            <div class="sort-filter-container">
+                <div class="filter-group">
+                    <span class="filter-label">SORT BY</span>
+                    <select class="sort-select" onchange="updateSort(this.value)">
+                        <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Relevance</option>
+                        <option value="discount" {% if sort_by == 'discount' %}selected{% endif %}>Discount</option>
+                        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price (lowest first)</option>
+                        <option value="new" {% if sort_by == 'new' %}selected{% endif %}>What's New</option>
+                        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price (highest first)</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Ratings</option>
+                    </select>
+                </div>
+
+                <!-- Filter button - exactly like in shopping app -->
+                <button id="filterToggle" class="filter-button" title="Filter options">
+                    🔽 Filter
+                </button>
             </div>
-        {% endif %}
+
+            <!-- Filter panel overlay -->
+            <div id="filterPanel" class="filter-panel" style="display:none;">
+                <h3>Filter</h3>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterGoogle" name="sources" value="google_books" {% if not sources_selected or 'google_books' in sources_selected %}checked{% endif %}>
+                    <label for="filterGoogle">Google Books</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterGutendx" name="sources" value="gutendx" {% if not sources_selected or 'gutendx' in sources_selected %}checked{% endif %}>
+                    <label for="filterGutendx">Project Gutenberg</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterOpenLibrary" name="sources" value="openlibrary" {% if not sources_selected or 'openlibrary' in sources_selected %}checked{% endif %}>
+                    <label for="filterOpenLibrary">Open Library</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterNYT" name="sources" value="nyt" {% if not sources_selected or 'nyt' in sources_selected %}checked{% endif %}>
+                    <label for="filterNYT">NYT</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterUploaded" name="sources" value="uploaded" {% if not sources_selected or 'uploaded' in sources_selected %}checked{% endif %}>
+                    <label for="filterUploaded">Uploaded</label>
+                </div>
+                <div class="filter-footer">
+                    <button class="filter-reset">Reset</button>
+                    <button class="filter-apply">Apply Filter</button>
+                </div>
+            </div>
+        </div>
     </div>
-    {% if results %}
-        <div class="results-list">
-            {% for book in results %}
-                <div class="book-result">
-                    {% if book.source == 'google_books' and book.thumbnail %}
-                        <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="book-cover">
-                    {% elif book.source != 'google_books' %}
-                        <div class="book-icon">📚</div>
-                    {% else %}
-                        <div class="book-icon">📖</div>
-                    {% endif %}
-                    <div class="book-content">
-                        <div class="book-url">
-                            {% if book.source == 'google_books' %}
-                                <div class="book-favicon">📖</div>
-                                <span class="book-domain">books.google.com</span>
-                                <span class="book-type">Google Books</span>
+
+    <main class="container">
+        {% if query and not show_login_modal %}
+            {% if results %}
+                <div class="results-header">
+                    <h1>Results for "{{ query }}"</h1>
+                    <div class="results-count">{{ total_results or results|length }} matches</div>
+                </div>
+
+                <div class="book-grid">
+                    {% for book in results %}
+                        <div class="book-card">
+                            {% if book.thumbnail %}
+                                <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="book-thumbnail" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="book-thumbnail-placeholder" style="display: none;">📚</div>
                             {% else %}
-                                <div class="book-favicon">📚</div>
-                                <span class="book-domain">{{ request.host }}</span>
-                                <span class="book-type">{{ book.filename.split('.')[-1].upper() }}</span>
+                                <div class="book-thumbnail-placeholder">📚</div>
                             {% endif %}
-                        </div>
-                        {% if book.source == 'google_books' %}
-                            <a href="{{ book.info_link }}" target="_blank" class="book-title">{{ book.title }}</a>
-                        {% else %}
-                            <div class="book-title no-link">{{ book.title }}</div>
-                        {% endif %}
-                        <div class="book-meta-row">
-                            <span class="book-author">by {{ book.author }}</span>
-                            {% if book.source == 'google_books' %}
-                                {% if book.published_date %}<span class="book-year">{{ book.published_date[:4] }}</span>{% endif %}
-                                {% if book.page_count and book.page_count > 0 %}<span class="book-pages">{{ book.page_count }} pages</span>{% endif %}
-                            {% else %}
-                                <span class="book-year">Uploaded by {{ book.uploader }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="book-description">
-                            {% if book.description|length > 160 %}
-                                {{ book.description[:160] }}...
-                            {% else %}
-                                {{ book.description }}
-                            {% endif %}
-                        </div>
-                        <div class="book-actions">
-                            {% if book.source == 'google_books' %}
-                                {% if book.preview_link %}
-                                    <a href="{{ book.preview_link }}" target="_blank" class="action-link primary">Preview</a>
-                                    <button onclick="showPreview('{{ book.preview_link }}')" class="action-link">Embed Preview</button>
+
+                            <div class="book-details">
+                                <h3 class="book-title">{{ book.title }}</h3>
+
+                                {% if book.author %}
+                                    <div class="book-author">by {{ book.author }}</div>
                                 {% endif %}
-                                <a href="{{ book.info_link }}" target="_blank" class="action-link">More Info</a>
-                            {% else %}
-                                <button onclick="readBook({{ book.id }}, '{{ book.title }}', '{{ book.filename }}')" class="action-link read">📖 Read</button>
-                                <a href="{{ url_for('download_book', book_id=book.id) }}" class="action-link primary">⬇️ Download</a>
-                                <button onclick="shareBook('{{ book.title }}', '{{ book.author }}')" class="action-link">📤 Share</button>
-                            {% endif %}
+
+                                {% if book.price %}
+                                    <div class="book-price">Price: {{ book.price }}</div>
+                                {% elif book.source == 'gutendx' %}
+                                    <div class="book-price">Free (Project Gutenberg)</div>
+                                {% endif %}
+
+                                {% if book.description %}
+                                    <div class="book-description">
+                                        {% if book.description|length > 160 %}
+                                            {{ book.description[:160] }}...
+                                        {% else %}
+                                            {{ book.description }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Reviews section -->
+                                {% if book.reviews %}
+                                    <div class="book-reviews">
+                                        <div class="reviews-title">Reviews</div>
+                                        {% for review in book.reviews[:2] %}
+                                            <div class="review-item">
+                                                <div class="review-author">{{ review.username }}</div>
+                                                <div class="review-text">{{ review.text }}</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="book-meta">
+                                    <div class="book-source">
+                                        {% if book.source == 'google_books' %}
+                                            📖Google Books
+                                        {% elif book.source == 'uploaded' and book.filename %}
+                                            📚Uploaded {{ book.filename.split('.')[-1].upper() }}
+                                        {% elif book.source == 'openlibrary' %}
+                                            📚Open Library
+                                        {% elif book.source == 'gutendx' %}
+                                            📚Project Gutenberg (Free)
+                                        {% elif book.source == 'nyt' %}
+                                            📚NYT Best Sellers
+                                        {% else %}
+                                            📚Unknown Source
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="book-actions">
+                                        {% if book.source == 'google_books' %}
+                                            {% if book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-outline" target="_blank">Preview</a>
+                                            {% endif %}
+                                            <a href="{{ book.info_link or '#' }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            
+                                        {% elif book.source == 'uploaded' %}
+                                            <a href="{{ url_for('download_book', book_id=book.id) }}" class="btn btn-solid">⬇️ Download</a>
+                                            
+                                        {% elif book.source == 'openlibrary' %}
+                                            {% if book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-outline" target="_blank">Preview</a>
+                                            {% endif %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            {% endif %}
+                                            
+                                        {% elif book.source == 'gutendx' %}
+                                            {% if book.download_url %}
+                                                <a href="{{ book.download_url }}" class="btn btn-solid" target="_blank">⬇️ Download</a>
+                                            {% elif book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-solid" target="_blank">⬇️ Download</a>
+                                            {% endif %}
+                                            
+                                            <button class="btn btn-outline"
+                                                onclick='addFreeBookToLibrary({
+                                                    title:"{{ book.title|e }}",
+                                                    author:"{{ (book.author or "Unknown Author")|e }}",
+                                                    description:"{{ (book.description or "No description")|e }}",
+                                                    download_url:"{{ book.download_url or book.preview_link }}",
+                                                    source:"{{ book.source }}"
+                                                })'>
+                                                Add to My Books
+                                            </button>
+                                            
+                                        {% elif book.source == 'nyt' %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            {% endif %}
+                                            
+                                        {% else %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">Open</a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
-    {% elif query %}
-        <div class="no-results">
-            <h2>No books found</h2>
-            <p>Your search "{{ query }}" did not match any books.</p>
-        </div>
-    {% else %}
-        <div class="no-results">
-            <h2>Search for books</h2>
-            <p>Enter a book title, author name, or topic to find books</p>
-        </div>
+            {% elif query %}
+                <div class="no-results">
+                    <h2>No books found</h2>
+                    <p>Your search "{{ query }}" did not match any books.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </main>
+
+    {% include 'modals.html' %}
+
+    {% if show_login_modal %}
+    <script>
+        // Auto-show login modal when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            showModal('loginModal');
+        });
+    </script>
     {% endif %}
-</main>
 
-<!-- EXACT COPY OF YOUR MODALS.HTML -->
-{% if not session.user_id %}
-<!-- Login Modal -->
-<div id="loginModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Login to BookFinder</h2>
-            <span class="close" onclick="closeModal('loginModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Email Address" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                
-                <!-- Forgot Password Link -->
-                <div class="form-group text-center">
-                    <a href="#" onclick="showForgotPasswordModal()" class="forgot-password-link">
-                        Forgot Password?
-                    </a>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Login</button>
-                    <button type="button" onclick="closeModal('loginModal')" class="btn-secondary">Cancel</button>
-                </div>
-                
-                <!-- Sign Up Redirect Section -->
-                <div class="signup-redirect">
-                    <p>Don't have an account? 
-                        <a href="#" onclick="redirectToSignup()" class="signup-link">Create Account</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+    <script>
+        // Filter toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterToggle = document.getElementById('filterToggle');
+            const filterPanel = document.getElementById('filterPanel');
+            
+            if (filterToggle && filterPanel) {
+                filterToggle.addEventListener('click', function() {
+                    if (filterPanel.style.display === 'none' || filterPanel.style.display === '') {
+                        filterPanel.style.display = 'block';
+                    } else {
+                        filterPanel.style.display = 'none';
+                    }
+                });
 
-<!-- Signup Modal -->
-<div id="signupModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Create Account</h2>
-            <span class="close" onclick="closeModal('signupModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="registerForm">
-                <div class="form-group">
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Email Address" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Create Account</button>
-                    <button type="button" onclick="closeModal('signupModal')" class="btn-secondary">Cancel</button>
-                </div>
-                
-                <!-- Login Redirect Section -->
-                <div class="login-redirect">
-                    <p>Already have an account? 
-                        <a href="#" onclick="redirectToLogin()" class="login-link">Sign In</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                // Reset all checkboxes
+                document.querySelector('.filter-reset').addEventListener('click', function() {
+                    const checkboxes = document.querySelectorAll('#filterPanel input[type=checkbox]');
+                    checkboxes.forEach(cb => cb.checked = true);
+                });
 
-<!-- Forgot Password Modal -->
-<div id="forgotPasswordModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Reset Your Password</h2>
-            <span class="close" onclick="closeForgotPasswordModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="forgot-password-info">
-                <p>Enter your registered email address and we'll send you a reset link.</p>
-            </div>
-            <form id="forgotPasswordForm">
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Enter your registered email address" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Send Reset Link</button>
-                    <button type="button" onclick="closeForgotPasswordModal()" class="btn-secondary">Cancel</button>
-                </div>
-            </form>
-            <div class="back-to-login">
-                <a href="#" onclick="backToLogin()">← Back to Login</a>
-            </div>
-        </div>
-    </div>
-</div>
+                // Apply filters
+                document.querySelector('.filter-apply').addEventListener('click', function() {
+                    const checked = Array.from(document.querySelectorAll('#filterPanel input[type=checkbox]:checked'))
+                        .map(cb => cb.value);
 
-<!-- Modal Styles -->
-<style>
-.modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+                    const url = new URL(window.location);
+                    if (checked.length > 0) {
+                        url.searchParams.set('sources', checked.join(','));
+                    } else {
+                        url.searchParams.delete('sources');
+                    }
+                    window.location = url;
+                    
+                    // Hide panel after applying
+                    filterPanel.style.display = 'none';
+                });
+            }
+        });
 
-.modal-content {
-    background-color: white;
-    padding: 0;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: modalSlideIn 0.3s ease-out;
-}
+        // Close filter panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const filterPanel = document.getElementById('filterPanel');
+            const filterToggle = document.getElementById('filterToggle');
+            
+            if (filterPanel && filterToggle) {
+                if (!filterPanel.contains(event.target) && !filterToggle.contains(event.target)) {
+                    filterPanel.style.display = 'none';
+                }
+            }
+        });
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
-}
-
-.close {
-    color: #6b7280;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0;
-    background: none;
-    border: none;
-}
-
-.close:hover {
-    color: #374151;
-}
-
-.modal-body {
-    padding: 24px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.btn-primary {
-    flex: 1;
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-primary:hover {
-    background-color: #2563eb;
-}
-
-.btn-secondary {
-    flex: 1;
-    background-color: #f3f4f6;
-    color: #374151;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-secondary:hover {
-    background-color: #e5e7eb;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.forgot-password-link {
-    color: #3b82f6;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.forgot-password-link:hover {
-    text-decoration: underline;
-}
-
-/* Sign Up and Login Redirect Sections */
-.signup-redirect, .login-redirect {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.signup-redirect p, .login-redirect p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.signup-link, .login-link {
-    color: #3b82f6;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.signup-link:hover, .login-link:hover {
-    text-decoration: underline;
-    color: #2563eb;
-}
-
-.forgot-password-info {
-    margin-bottom: 20px;
-}
-
-.forgot-password-info p {
-    color: #6b7280;
-    font-size: 14px;
-    margin: 0;
-    line-height: 1.5;
-}
-
-.back-to-login {
-    text-align: center;
-    margin-top: 16px;
-}
-
-.back-to-login a {
-    color: #6b7280;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.back-to-login a:hover {
-    color: #374151;
-    text-decoration: underline;
-}
-
-/* Success/Error Messages */
-.message {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
-}
-
-.message.success {
-    background-color: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-
-.message.error {
-    background-color: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-</style>
-
-<!-- Modal JavaScript -->
-<script>
-// Show/Hide Modal Functions
-function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'flex';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-// Modal Redirection
-function redirectToSignup() {
-    closeModal('loginModal');
-    showModal('signupModal');
-}
-
-function redirectToLogin() {
-    closeModal('signupModal');
-    showModal('loginModal');
-}
-
-// Forgot Password Modal Functions
-function showForgotPasswordModal() {
-    closeModal('loginModal');
-    showModal('forgotPasswordModal');
-}
-
-function closeForgotPasswordModal() {
-    closeModal('forgotPasswordModal');
-}
-
-function backToLogin() {
-    closeForgotPasswordModal();
-    showModal('loginModal');
-}
-
-// Message Display Function
-function showMessage(message, type) {
-    // Remove existing messages
-    const existingMessages = document.querySelectorAll('.message');
-    existingMessages.forEach(msg => msg.remove());
-    
-    // Create new message
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    // Insert message at the top of the active modal
-    const activeModal = document.querySelector('.modal[style*="flex"]');
-    if (activeModal) {
-        const modalBody = activeModal.querySelector('.modal-body');
-        modalBody.insertBefore(messageDiv, modalBody.firstChild);
-        
-        // Auto-remove success messages after 3 seconds
-        if (type === 'success') {
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 3000);
+        function updateSort(sortBy) {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', sortBy);
+            window.location = url;
         }
-    }
-}
 
-// Login Form Handler
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch('/login', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            setTimeout(() => {
-                closeModal('loginModal');
-                location.reload();
-            }, 1000);
-        } else {
-            showMessage(data.message, 'error');
+        async function addFreeBookToLibrary(book) {
+            try {
+                const res = await fetch("{{ url_for('add_free_book') }}", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify(book)
+                });
+                const data = await res.json();
+                if (data.require_login) {
+                    if (typeof showModal === "function") showModal('loginModal');
+                    return;
+                }
+                alert(data.message || (data.success ? "Added to My Books!" : "Failed to add"));
+            } catch (e) {
+                alert("Error adding book");
+            }
         }
-    })
-    .catch(error => {
-        showMessage('Login failed. Please try again.', 'error');
-    });
-});
-
-// Registration Form Handler
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirm_password');
-    
-    // Client-side password confirmation check
-    if (password !== confirmPassword) {
-        showMessage('Passwords do not match', 'error');
-        return;
-    }
-    
-    fetch('/register', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            setTimeout(() => {
-                closeModal('signupModal');
-                showModal('loginModal');
-            }, 1500);
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Registration failed. Please try again.', 'error');
-    });
-});
-
-// Forgot Password Form Handler
-document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const email = formData.get('email');
-    
-    if (!email) {
-        showMessage('Please enter your email address', 'error');
-        return;
-    }
-    
-    fetch('/forgot-password', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            // Clear the form
-            document.getElementById('forgotPasswordForm').reset();
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Failed to process request. Please try again.', 'error');
-    });
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        const activeModal = document.querySelector('.modal[style*="flex"]');
-        if (activeModal) {
-            activeModal.style.display = 'none';
-        }
-    }
-});
-
-// Auto-show login modal for non-logged-in users
-{% if not session.user_id %}
-document.addEventListener('DOMContentLoaded', function() {
-    showModal('loginModal');
-});
-{% endif %}
-</script>
-{% endif %}
+    </script>
 </body>
 </html>
