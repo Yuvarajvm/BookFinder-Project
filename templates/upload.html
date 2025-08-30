@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Book - BookFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #f5f5f5;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .nav-login-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            text-decoration: none;
+            color: white !important;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem 2rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideInDown 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .page-header:hover::before {
+            left: 100%;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .upload-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-5px);
+        }
+
+        .upload-area.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 8px 20px rgba(102, 126, 234, 0.3));
+        }
+
+        .upload-area h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .click-text {
+            color: #667eea;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .file-types {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .file-selected {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            position: relative;
+            animation: slideInUp 0.5s ease;
+        }
+
+        .file-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+        }
+
+        .file-info h4 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .file-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .clear-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .book-form {
+            display: none;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:disabled {
+            background: #ddd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 0 1rem;
+            }
+            
+            .upload-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .page-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">BookFinder</a>
+            </div>
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('my_books') }}">My Books</a>
+                {% endif %}
+                <a href="{{ url_for('contact') }}">Contact</a>
+                
+                {% if session.user_id %}
+                    <div class="user-info">
+                        <span>Welcome, {{ session.username }}!</span>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="page-header">
+            <h1>Upload Your Book</h1>
+            <p>Share your favorite books with the BookFinder community</p>
+        </div>
+
+        {% if not session.user_id %}
+            <div class="upload-container">
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 4rem; margin-bottom: 2rem; color: #667eea;">🔒</div>
+                    <h2>Login Required</h2>
+                    <p style="margin: 1rem 0 2rem; color: #666;">You need to be logged in to upload books to our library.</p>
+                    <button onclick="showModal('loginModal')" class="submit-btn" style="max-width: 300px;">Login to Upload</button>
+                </div>
+            </div>
+        {% else %}
+            <div class="upload-container">
+                <div id="message" class="message"></div>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <!-- File Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" name="file" accept=".pdf,.epub" style="display: none;">
+                        <div class="upload-icon">📚</div>
+                        <h3>Upload Your Book</h3>
+                        <p>Drag and drop your book file here or <span class="click-text">click to select</span></p>
+                        <p class="file-types">Supported formats: PDF, EPUB (Max 50MB)</p>
+                    </div>
+                    
+                   <!-- Book Details Form (hidden initially) -->
+<div id="bookForm" class="book-form">
+    <div class="form-group">
+        <label for="title">Book Title *</label>
+        <input type="text" id="title" name="title" placeholder="Enter the book title">
+    </div>
+    
+    <div class="form-group">
+        <label for="author">Author (Optional)</label>
+        <input type="text" id="author" name="author" placeholder="Enter author name or leave blank">
+    </div>
+    
+    <div class="form-group">
+        <label for="isbn">ISBN (Optional)</label>
+        <input type="text" id="isbn" name="isbn" placeholder="Enter ISBN or leave blank">
+    </div>
+    
+    <div class="form-group">
+        <label for="description">Description (Optional)</label>
+        <textarea id="description" name="description" placeholder="Enter book description or leave blank"></textarea>
+    </div>
+    
+    <button type="submit" class="submit-btn" id="submitBtn">
+        <span id="submitText">Upload Book</span>
+    </button>
+</div>
+
+                </form>
+            </div>
+        {% endif %}
+    </main>
+
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const bookForm = document.getElementById('bookForm');
+    const uploadForm = document.getElementById('uploadForm');
+    const messageDiv = document.getElementById('message');
+    
+    if (!uploadArea || !fileInput) return; // Exit if elements don't exist (not logged in)
+    
+    // Click to select file
+    uploadArea.addEventListener('click', function(e) {
+        e.preventDefault();
+        fileInput.click();
+    });
+    
+    // Prevent the click event when clicking on the hidden input itself
+    fileInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+    
+    // Handle file selection (both click and drag)
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileSelect(file);
+        }
+    });
+    
+    // Drag and drop handlers
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'application/epub+zip'];
+        const allowedExtensions = ['.pdf', '.epub'];
+        const fileName = file.name.toLowerCase();
+        const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+        
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+            showMessage('Please select a valid PDF or EPUB file.', 'error');
+            return;
+        }
+        
+        // Validate file size (50MB)
+        const maxSize = 50 * 1024 * 1024;
+        if (file.size > maxSize) {
+            showMessage('File size must be less than 50MB.', 'error');
+            return;
+        }
+        
+        // Show selected file info
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+        
+        uploadArea.innerHTML = `
+            <div class="file-selected">
+                <div class="file-icon">📄</div>
+                <div class="file-info">
+                    <h4>${file.name}</h4>
+                    <p>${fileSize} MB • ${file.type || 'Unknown type'}</p>
+                </div>
+                <button type="button" onclick="clearFile()" class="clear-btn">✕</button>
+            </div>
+        `;
+        
+        bookForm.style.display = 'block';
+        hideMessage();
+    }
+    
+    // Function to clear selected file
+    window.clearFile = function() {
+        fileInput.value = '';
+        uploadArea.innerHTML = `
+            <div class="upload-icon">📚</div>
+            <h3>Upload Your Book</h3>
+            <p>Drag and drop your book file here or <span class="click-text">click to select</span></p>
+            <p class="file-types">Supported formats: PDF, EPUB (Max 50MB)</p>
+        `;
+        bookForm.style.display = 'none';
+        hideMessage();
+        
+        // Re-attach click event
+        document.getElementById('uploadArea').addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.click();
+        });
+    };
+    
+    // Handle form submission - Updated with redirect
+uploadForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validate required fields
+    const title = document.getElementById('title').value.trim();
+    if (!title) {
+        showMessage('Book title is required.', 'error');
+        document.getElementById('title').focus();
+        return;
+    }
+    
+    if (!fileInput.files[0]) {
+        showMessage('Please select a file to upload.', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const originalText = submitText.textContent;
+    
+    submitBtn.disabled = true;
+    submitText.textContent = 'Uploading...';
+    submitBtn.style.transform = 'scale(0.98)';
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('title', title);
+    formData.append('author', document.getElementById('author').value.trim() || '');
+    formData.append('isbn', document.getElementById('isbn').value.trim() || '');
+    formData.append('description', document.getElementById('description').value.trim() || '');
+    
+    // Submit form
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            uploadForm.reset();
+            clearFile();
+            
+            // NEW CODE - Redirect to My Books after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = data.redirect || '/my-books';
+            }, 1500);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Upload failed. Please check your connection and try again.', 'error');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitText.textContent = originalText;
+        submitBtn.style.transform = 'scale(1)';
+    });
+});
+
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const originalText = submitText.textContent;
+        
+        submitBtn.disabled = true;
+        submitText.textContent = 'Uploading...';
+        submitBtn.style.transform = 'scale(0.98)';
+        
+        // Create FormData - all fields, but only title is validated
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('title', title);
+        formData.append('author', document.getElementById('author').value.trim() || '');
+        formData.append('isbn', document.getElementById('isbn').value.trim() || '');
+        formData.append('description', document.getElementById('description').value.trim() || '');
+        
+        // Submit form
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                uploadForm.reset();
+                clearFile();
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Upload failed. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitText.textContent = originalText;
+            submitBtn.style.transform = 'scale(1)';
+        });
+    });
+    
+    function showMessage(message, type) {
+        messageDiv.textContent = message;
+        messageDiv.className = `message ${type}`;
+        messageDiv.style.display = 'block';
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    function hideMessage() {
+        messageDiv.style.display = 'none';
+    }
+});
+</script>
+
+    {% include 'modals.html' %}
+</body>
+</html>

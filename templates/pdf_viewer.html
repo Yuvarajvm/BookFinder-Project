@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading: {{ title }} - BookFinder Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #2d3748;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header with Close Button */
+        .reader-header {
+            background: #1a202c;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .reader-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .close-btn:hover {
+            background: #c82333;
+        }
+
+        /* Main Container */
+        .reader-container {
+            display: flex;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+
+        /* Sidebar - Fixed Width */
+        .sidebar {
+            width: 280px;
+            background: #1a202c;
+            border-right: 1px solid #4a5568;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .sidebar h3 {
+            color: #e2e8f0;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .sidebar button {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .sidebar button:hover {
+            background: #667eea;
+        }
+
+        /* PDF Viewer Area - Takes Remaining Space */
+        .pdf-content {
+            flex: 1;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .pdf-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .reader-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 120px;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 15px;
+            }
+            
+            .sidebar button {
+                min-width: 120px;
+                margin-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Title and Close Button -->
+    <div class="reader-header">
+        <div class="reader-title">📖 Reading: {{ title }}</div>
+        <button class="close-btn" onclick="window.location.href='/my-books'">✕ Close Reader</button>
+
+    </div>
+
+    <!-- Main Reader Container -->
+    <div class="reader-container">
+        <!-- Sidebar with PDF Tools -->
+        <div class="sidebar">
+            <h3>PDF Tools</h3>
+            <button onclick="zoomIn()">🔍 Zoom In</button>
+            <button onclick="zoomOut()">🔍 Zoom Out</button>
+            <button onclick="resetZoom()">↻ Reset Zoom</button>
+            <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            <button onclick="printPDF()">🖨️ Print PDF</button>
+        </div>
+
+        <!-- PDF Viewer -->
+        <div class="pdf-content">
+            <iframe id="pdfFrame" class="pdf-iframe" 
+                    src="{{ url_for('serve_pdf', book_id=book_id) }}" 
+                    title="PDF Viewer">
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        const pdfFrame = document.getElementById('pdfFrame');
+
+        // FIXED: Close button goes back to My Books instead of closing whole website
+        function goBackToBooks() {
+            window.history.back(); // Go back to previous page
+            // Alternative: window.location.href = '/my-books';
+        }
+
+        // Zoom Functions
+        function zoomIn() {
+            currentZoom += 0.2;
+            pdfFrame.style.transform = `scale(${currentZoom})`;
+            pdfFrame.style.transformOrigin = 'top left';
+        }
+
+        function zoomOut() {
+            if (currentZoom > 0.4) {
+                currentZoom -= 0.2;
+                pdfFrame.style.transform = `scale(${currentZoom})`;
+                pdfFrame.style.transformOrigin = 'top left';
+            }
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            pdfFrame.style.transform = 'scale(1)';
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function printPDF() {
+            try {
+                pdfFrame.contentWindow.print();
+            } catch (e) {
+                window.print(); // Fallback
+            }
+        }
+    </script>
+</body>
+</html>

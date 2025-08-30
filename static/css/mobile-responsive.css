@@ -1,0 +1,91 @@
+/* BookFinder Mobile Responsive CSS */
+
+/* Mobile devices (768px and below) */
+@media only screen and (max-width: 768px) {
+  
+  /* Make navbar mobile-friendly */
+  .navbar, .nav {
+    flex-direction: column !important;
+    text-align: center;
+    padding: 10px;
+  }
+  
+  .nav-item {
+    margin-bottom: 10px;
+    display: block;
+    width: 100%;
+  }
+  
+  /* Stack buttons vertically and make touch-friendly */
+  .btn, button, .search-btn {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 15px !important;
+    padding: 15px !important;
+    font-size: 16px !important;
+    min-height: 48px; /* Touch-friendly size */
+  }
+  
+  /* Adjust text sizes for mobile readability */
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+  body, p { font-size: 16px !important; }
+  
+  /* Make containers full width */
+  .container, .content, .main-content {
+    width: 100% !important;
+    padding: 10px !important;
+    margin: 0 !important;
+  }
+  
+  /* Stack cards/book results vertically */
+  .book-card, .result-card {
+    width: 100% !important;
+    margin-bottom: 20px !important;
+    display: block !important;
+  }
+  
+  /* Make search input full width */
+  .search-input, input[type="search"] {
+    width: 100% !important;
+    margin-bottom: 15px !important;
+    padding: 15px !important;
+    font-size: 16px !important;
+  }
+  
+  /* Hide less important elements on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Make images responsive */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Adjust spacing for mobile */
+  .section, .content-section {
+    padding: 15px 10px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  /* Make login/contact forms mobile-friendly */
+  .form-group {
+    margin-bottom: 20px !important;
+  }
+  
+  .form-control, input, textarea {
+    width: 100% !important;
+    padding: 15px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Small mobile devices (480px and below) */
+@media only screen and (max-width: 480px) {
+  body { font-size: 14px !important; }
+  h1 { font-size: 20px !important; }
+  .container { padding: 5px !important; }
+}

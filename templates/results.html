@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - BookFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-login-btn, .logout-btn {
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .nav-login-btn {
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .search-section {
+            padding: 2rem 0;
+            background: transparent;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .search-form {
+            display: flex;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            padding: 0 1.5rem;
+            font-size: 1rem;
+            outline: none;
+            background: transparent;
+            color: #333;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 50px;
+            margin: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: scale(1.02);
+        }
+
+        /* Sort and Filter container */
+        .sort-filter-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            color: #666;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .sort-select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .sort-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Filter button matching shopping app style */
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Filter panel - overlay style like shopping apps */
+        .filter-panel {
+            position: fixed;
+            top: 200px;
+            right: 20px;
+            width: 280px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            z-index: 1111;
+            border: 1px solid #eee;
+        }
+
+        .filter-panel h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .filter-option input[type="checkbox"] {
+            accent-color: #667eea;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .filter-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .filter-reset,
+        .filter-apply {
+            cursor: pointer;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid #ddd;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .filter-apply {
+            background: #667eea;
+            color: white;
+            border: none;
+        }
+
+        .filter-reset {
+            background: white;
+            color: #666;
+        }
+
+        .filter-reset:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-apply:hover {
+            background: #5a67d8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .results-header {
+            margin-bottom: 2rem;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .book-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-thumbnail {
+            width: 120px;
+            height: 160px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .book-thumbnail-placeholder {
+            width: 120px;
+            height: 160px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .book-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .book-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2d3748;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            color: #718096;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .book-price {
+            color: #38a169;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .book-description {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .book-reviews {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .reviews-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .review-author {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        .review-text {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+
+        .book-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .book-source {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .btn-solid {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-solid:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #f7f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #718096;
+        }
+
+        .no-results h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        @media (max-width: 768px) {
+            .sort-filter-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-panel {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+
+            .book-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .book-thumbnail, .book-thumbnail-placeholder {
+                width: 100px;
+                height: 140px;
+                align-self: center;
+            }
+
+            .book-meta {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .book-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">
+                    <img src="/static/images/bookfinder-logo.png" alt="BookFinder" class="logo-img">
+                    <span>BookFinder</span>
+                </a>
+            </div>
+
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('my_books') }}">My Books</a>
+                {% endif %}
+                <a href="{{ url_for('contact') }}">Contact</a>
+
+                {% if session.user_id %}
+                    <span style="color:#555">Welcome, {{ session.username }}!</span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                {% else %}
+                    <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <div class="search-section">
+        <div class="search-container">
+            <form action="{{ url_for('search') }}" method="GET" class="search-form">
+                <input type="text" name="q" placeholder="Search books..." class="search-input" value="{{ query or '' }}">
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+
+            <!-- Sort and Filter container - matching shopping app style -->
+            <div class="sort-filter-container">
+                <div class="filter-group">
+                    <span class="filter-label">SORT BY</span>
+                    <select class="sort-select" onchange="updateSort(this.value)">
+                        <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Relevance</option>
+                        <option value="discount" {% if sort_by == 'discount' %}selected{% endif %}>Discount</option>
+                        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price (lowest first)</option>
+                        <option value="new" {% if sort_by == 'new' %}selected{% endif %}>What's New</option>
+                        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price (highest first)</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Ratings</option>
+                    </select>
+                </div>
+
+                <!-- Filter button - exactly like in shopping app -->
+                <button id="filterToggle" class="filter-button" title="Filter options">
+                    🔽 Filter
+                </button>
+            </div>
+
+            <!-- Filter panel overlay -->
+            <div id="filterPanel" class="filter-panel" style="display:none;">
+                <h3>Filter</h3>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterGoogle" name="sources" value="google_books" {% if not sources_selected or 'google_books' in sources_selected %}checked{% endif %}>
+                    <label for="filterGoogle">Google Books</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterGutendx" name="sources" value="gutendx" {% if not sources_selected or 'gutendx' in sources_selected %}checked{% endif %}>
+                    <label for="filterGutendx">Project Gutenberg</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterOpenLibrary" name="sources" value="openlibrary" {% if not sources_selected or 'openlibrary' in sources_selected %}checked{% endif %}>
+                    <label for="filterOpenLibrary">Open Library</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterNYT" name="sources" value="nyt" {% if not sources_selected or 'nyt' in sources_selected %}checked{% endif %}>
+                    <label for="filterNYT">NYT</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="filterUploaded" name="sources" value="uploaded" {% if not sources_selected or 'uploaded' in sources_selected %}checked{% endif %}>
+                    <label for="filterUploaded">Uploaded</label>
+                </div>
+                <div class="filter-footer">
+                    <button class="filter-reset">Reset</button>
+                    <button class="filter-apply">Apply Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        {% if query and not show_login_modal %}
+            {% if results %}
+                <div class="results-header">
+                    <h1>Results for "{{ query }}"</h1>
+                    <div class="results-count">{{ total_results or results|length }} matches</div>
+                </div>
+
+                <div class="book-grid">
+                    {% for book in results %}
+                        <div class="book-card">
+                            {% if book.thumbnail %}
+                                <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="book-thumbnail" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="book-thumbnail-placeholder" style="display: none;">📚</div>
+                            {% else %}
+                                <div class="book-thumbnail-placeholder">📚</div>
+                            {% endif %}
+
+                            <div class="book-details">
+                                <h3 class="book-title">{{ book.title }}</h3>
+
+                                {% if book.author %}
+                                    <div class="book-author">by {{ book.author }}</div>
+                                {% endif %}
+
+                                {% if book.price %}
+                                    <div class="book-price">Price: {{ book.price }}</div>
+                                {% elif book.source == 'gutendx' %}
+                                    <div class="book-price">Free (Project Gutenberg)</div>
+                                {% endif %}
+
+                                {% if book.description %}
+                                    <div class="book-description">
+                                        {% if book.description|length > 160 %}
+                                            {{ book.description[:160] }}...
+                                        {% else %}
+                                            {{ book.description }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Reviews section -->
+                                {% if book.reviews %}
+                                    <div class="book-reviews">
+                                        <div class="reviews-title">Reviews</div>
+                                        {% for review in book.reviews[:2] %}
+                                            <div class="review-item">
+                                                <div class="review-author">{{ review.username }}</div>
+                                                <div class="review-text">{{ review.text }}</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="book-meta">
+                                    <div class="book-source">
+                                        {% if book.source == 'google_books' %}
+                                            📖Google Books
+                                        {% elif book.source == 'uploaded' and book.filename %}
+                                            📚Uploaded {{ book.filename.split('.')[-1].upper() }}
+                                        {% elif book.source == 'openlibrary' %}
+                                            📚Open Library
+                                        {% elif book.source == 'gutendx' %}
+                                            📚Project Gutenberg (Free)
+                                        {% elif book.source == 'nyt' %}
+                                            📚NYT Best Sellers
+                                        {% else %}
+                                            📚Unknown Source
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="book-actions">
+                                        {% if book.source == 'google_books' %}
+                                            {% if book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-outline" target="_blank">Preview</a>
+                                            {% endif %}
+                                            <a href="{{ book.info_link or '#' }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            
+                                        {% elif book.source == 'uploaded' %}
+                                            <a href="{{ url_for('download_book', book_id=book.id) }}" class="btn btn-solid">⬇️ Download</a>
+                                            
+                                        {% elif book.source == 'openlibrary' %}
+                                            {% if book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-outline" target="_blank">Preview</a>
+                                            {% endif %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            {% endif %}
+                                            
+                                        {% elif book.source == 'gutendx' %}
+                                            {% if book.download_url %}
+                                                <a href="{{ book.download_url }}" class="btn btn-solid" target="_blank">⬇️ Download</a>
+                                            {% elif book.preview_link %}
+                                                <a href="{{ book.preview_link }}" class="btn btn-solid" target="_blank">⬇️ Download</a>
+                                            {% endif %}
+                                            
+                                            <button class="btn btn-outline"
+                                                onclick='addFreeBookToLibrary({
+                                                    title:"{{ book.title|e }}",
+                                                    author:"{{ (book.author or "Unknown Author")|e }}",
+                                                    description:"{{ (book.description or "No description")|e }}",
+                                                    download_url:"{{ book.download_url or book.preview_link }}",
+                                                    source:"{{ book.source }}"
+                                                })'>
+                                                Add to My Books
+                                            </button>
+                                            
+                                        {% elif book.source == 'nyt' %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">More Info</a>
+                                            {% endif %}
+                                            
+                                        {% else %}
+                                            {% if book.info_link %}
+                                                <a href="{{ book.info_link }}" class="btn btn-solid" target="_blank">Open</a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% elif query %}
+                <div class="no-results">
+                    <h2>No books found</h2>
+                    <p>Your search "{{ query }}" did not match any books.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </main>
+
+    {% include 'modals.html' %}
+
+    {% if show_login_modal %}
+    <script>
+        // Auto-show login modal when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            showModal('loginModal');
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        // Filter toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterToggle = document.getElementById('filterToggle');
+            const filterPanel = document.getElementById('filterPanel');
+            
+            if (filterToggle && filterPanel) {
+                filterToggle.addEventListener('click', function() {
+                    if (filterPanel.style.display === 'none' || filterPanel.style.display === '') {
+                        filterPanel.style.display = 'block';
+                    } else {
+                        filterPanel.style.display = 'none';
+                    }
+                });
+
+                // Reset all checkboxes
+                document.querySelector('.filter-reset').addEventListener('click', function() {
+                    const checkboxes = document.querySelectorAll('#filterPanel input[type=checkbox]');
+                    checkboxes.forEach(cb => cb.checked = true);
+                });
+
+                // Apply filters
+                document.querySelector('.filter-apply').addEventListener('click', function() {
+                    const checked = Array.from(document.querySelectorAll('#filterPanel input[type=checkbox]:checked'))
+                        .map(cb => cb.value);
+
+                    const url = new URL(window.location);
+                    if (checked.length > 0) {
+                        url.searchParams.set('sources', checked.join(','));
+                    } else {
+                        url.searchParams.delete('sources');
+                    }
+                    window.location = url;
+                    
+                    // Hide panel after applying
+                    filterPanel.style.display = 'none';
+                });
+            }
+        });
+
+        // Close filter panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const filterPanel = document.getElementById('filterPanel');
+            const filterToggle = document.getElementById('filterToggle');
+            
+            if (filterPanel && filterToggle) {
+                if (!filterPanel.contains(event.target) && !filterToggle.contains(event.target)) {
+                    filterPanel.style.display = 'none';
+                }
+            }
+        });
+
+        function updateSort(sortBy) {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', sortBy);
+            window.location = url;
+        }
+
+        async function addFreeBookToLibrary(book) {
+            try {
+                const res = await fetch("{{ url_for('add_free_book') }}", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify(book)
+                });
+                const data = await res.json();
+                if (data.require_login) {
+                    if (typeof showModal === "function") showModal('loginModal');
+                    return;
+                }
+                alert(data.message || (data.success ? "Added to My Books!" : "Failed to add"));
+            } catch (e) {
+                alert("Error adding book");
+            }
+        }
+
+        // --- FIXES FOR YOUR ISSUES ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fix 1: Modal close (×) button redirects to homepage
+            var closeBtn = document.getElementById('modalClose');
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    window.location.href = '/';
+                };
+            }
+            
+            // Fix 2: Modal cancel button redirects to homepage
+            var cancelBtn = document.getElementById('modalCancel');
+            if (cancelBtn) {
+                cancelBtn.onclick = function() {
+                    window.location.href = '/';
+                };
+            }
+
+            // Fix 3: Login form submission with search query preservation
+            var loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    var formData = new FormData(this);
+                    
+                    fetch('/login', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Get current search query from URL or form
+                            var currentQuery = '{{ query }}';
+                            var currentSources = '{{ sources_selected|join(",") }}';
+                            
+                            if (currentQuery) {
+                                var redirectUrl = '/search?q=' + encodeURIComponent(currentQuery);
+                                if (currentSources) {
+                                    redirectUrl += '&sources=' + encodeURIComponent(currentSources);
+                                }
+                                window.location.href = redirectUrl;
+                            } else {
+                                window.location.href = '/';
+                            }
+                        } else {
+                            alert(data.message || 'Login failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Login error:', error);
+                        alert('Login failed. Please try again.');
+                    });
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

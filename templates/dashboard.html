@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - BookFinder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        /* Login Required Styles with Animations */
+        .login-required {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .login-card {
+            background: white;
+            padding: 4rem 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .login-card:hover::before {
+            opacity: 1;
+            transform: rotate(45deg) translate(50%, 50%);
+        }
+
+        .login-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-card .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #667eea;
+            animation: pulse 2s infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .login-card:hover .icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .login-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: slideInDown 0.8s ease;
+        }
+
+        .login-card p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            animation: slideInUp 0.8s ease 0.2s both;
+        }
+
+        /* Dashboard Styles with Enhanced Animations */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideInDown 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .welcome-banner:hover::before {
+            left: 100%;
+        }
+
+        .welcome-banner h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .welcome-banner p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-number {
+            transform: scale(1.1);
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .stat-card:hover .stat-label {
+            color: #333;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .action-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .action-card:nth-child(1) { animation-delay: 0.5s; }
+        .action-card:nth-child(2) { animation-delay: 0.6s; }
+        .action-card:nth-child(3) { animation-delay: 0.7s; }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            transition: left 0.6s ease;
+        }
+
+        .action-card:hover::before {
+            left: 0;
+        }
+
+        .action-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-card .icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.4s ease;
+            display: inline-block;
+        }
+
+        .action-card:hover .icon {
+            transform: scale(1.2) rotate(10deg);
+            filter: drop-shadow(0 5px 15px rgba(102, 126, 234, 0.3));
+        }
+
+        .action-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .action-card:hover h3 {
+            color: #667eea;
+        }
+
+        .action-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .action-card:hover p {
+            color: #555;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            transition: left 0.6s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        .recent-activity {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            animation: fadeInUp 0.8s ease 0.8s both;
+            transition: all 0.3s ease;
+        }
+
+        .recent-activity:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .recent-activity h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .recent-activity h3::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 15px;
+            padding: 1.2rem 1rem;
+            transform: translateX(10px);
+        }
+
+        .activity-icon {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 1rem;
+            font-size: 1.3rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .activity-item:hover .activity-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.3rem;
+            transition: color 0.3s ease;
+        }
+
+        .activity-item:hover .activity-title {
+            color: #667eea;
+        }
+
+        .activity-time {
+            color: #666;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .activity-item:hover .activity-time {
+            color: #555;
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: calc(200px + 100%) 0;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 0 1rem;
+            }
+
+            .login-card {
+                padding: 3rem 2rem;
+            }
+
+            .login-card h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .action-card:hover {
+                transform: translateY(-10px) scale(1.02);
+            }
+            
+            .stat-card:hover {
+                transform: translateY(-10px) scale(1.01);
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: #fff;
+            }
+            
+            .header {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+            }
+            
+            .stat-card, .action-card, .recent-activity, .login-card {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('home') }}">BookFinder</a>
+            </div>
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                {% if session.user_id %}
+                    <a href="{{ url_for('my_books') }}">My Books</a>
+                {% endif %}
+                <a href="{{ url_for('contact') }}">Contact</a>
+                
+                {% if session.user_id %}
+                    <div class="user-info">
+                        <span>Welcome, {{ session.username }}!</span>
+                        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% if not session.user_id %}
+            <!-- Login Required Section with Enhanced Animations -->
+            <div class="login-required">
+                <div class="login-card">
+                    <div class="icon">🔒</div>
+                    <h1>Dashboard Access</h1>
+                    <p>You need to be logged in to access your personalized dashboard. Please log in to view your stats, manage your books, and access all features.</p>
+                    <button onclick="showModal('loginModal')" class="btn-primary">Login to Continue</button>
+                </div>
+            </div>
+        {% else %}
+            <!-- Enhanced Dashboard Content -->
+            <div class="dashboard-container">
+                <div class="welcome-banner">
+                    <h2>Welcome back, {{ session.username }}! 👋</h2>
+                    <p>Ready to discover and share amazing books today?</p>
+                </div>
+
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="{{ uploaded_books_count or 0 }}">0</div>
+                        <div class="stat-label">Books Uploaded</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="{{ downloads_count or 0 }}">0</div>
+                        <div class="stat-label">Total Downloads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="{{ total_books_count or 0 }}">0</div>
+                        <div class="stat-label">Books in Library</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" data-target="{{ days_since_joined or 0 }}">0</div>
+                        <div class="stat-label">Days as Member</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <div class="action-card">
+                        <div class="icon">📚</div>
+                        <h3>Upload New Book</h3>
+                        <p>Share your favorite books with the community and help others discover great reads</p>
+                        <a href="{{ url_for('upload_page') }}" class="btn-primary">Upload Book</a>
+                    </div>
+                    
+                    <div class="action-card">
+                        <div class="icon">📖</div>
+                        <h3>My Library</h3>
+                        <p>View and manage all your uploaded books, track downloads, and edit details</p>
+                        <a href="{{ url_for('my_books') }}" class="btn-primary">View My Books</a>
+                    </div>
+                    
+                    <div class="action-card">
+                        <div class="icon">🔍</div>
+                        <h3>Discover Books</h3>
+                        <p>Search through our growing collection and find your next great read</p>
+                        <a href="{{ url_for('home') }}" class="btn-primary">Browse Books</a>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                            <div class="activity-item">
+                                <div class="activity-icon">{{ activity.icon or '📚' }}</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">{{ activity.title }}</div>
+                                    <div class="activity-time">{{ activity.time }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="activity-item">
+                            <div class="activity-icon">🎉</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Welcome to BookFinder!</div>
+                                <div class="activity-time">Start by uploading your first book or exploring our collection</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">💡</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Tip: Upload books in PDF or EPUB format</div>
+                                <div class="activity-time">Maximum file size is 50MB per book</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">🤝</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Share books and help build our community</div>
+                                <div class="activity-time">Every book you upload helps other readers discover new content</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if session.user_id %}
+                // Enhanced counter animation
+                const statNumbers = document.querySelectorAll('.stat-number');
+                const animateCounter = (element) => {
+                    const target = parseInt(element.dataset.target);
+                    const duration = 2000;
+                    const increment = target / (duration / 16);
+                    let current = 0;
+                    
+                    const updateCounter = () => {
+                        current += increment;
+                        if (current < target) {
+                            element.textContent = Math.floor(current);
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            element.textContent = target;
+                        }
+                    };
+                    
+                    updateCounter();
+                };
+
+                // Intersection Observer for animations
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            if (entry.target.classList.contains('stat-number')) {
+                                setTimeout(() => {
+                                    animateCounter(entry.target);
+                                }, 500);
+                            }
+                            entry.target.style.animationPlayState = 'running';
+                        }
+                    });
+                }, observerOptions);
+
+                // Observe all animated elements
+                statNumbers.forEach(stat => observer.observe(stat));
+                document.querySelectorAll('.stat-card, .action-card, .activity-item').forEach(el => {
+                    observer.observe(el);
+                });
+
+                // Enhanced keyboard shortcuts with visual feedback
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey && e.key === 'u') {
+                        e.preventDefault();
+                        showShortcutFeedback('Upload Book');
+                        setTimeout(() => {
+                            window.location.href = '{{ url_for("upload_page") }}';
+                        }, 300);
+                    }
+                    
+                    if (e.ctrlKey && e.key === 'm') {
+                        e.preventDefault();
+                        showShortcutFeedback('My Books');
+                        setTimeout(() => {
+                            window.location.href = '{{ url_for("my_books") }}';
+                        }, 300);
+                    }
+                });
+
+                // Shortcut feedback function
+                function showShortcutFeedback(action) {
+                    const feedback = document.createElement('div');
+                    feedback.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 1rem 2rem;
+                        border-radius: 10px;
+                        font-weight: 500;
+                        z-index: 9999;
+                        animation: shortcutFeedback 0.6s ease;
+                    `;
+                    feedback.textContent = `Opening ${action}...`;
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                        feedback.remove();
+                    }, 600);
+                }
+
+                // Add shortcut feedback animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes shortcutFeedback {
+                        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                        50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // Parallax effect on scroll
+                window.addEventListener('scroll', () => {
+                    const scrolled = window.pageYOffset;
+                    const parallax = document.querySelector('.welcome-banner');
+                    if (parallax) {
+                        parallax.style.transform = `translateY(${scrolled * 0.1}px)`;
+                    }
+                });
+
+                // Add floating animation to icons
+                const icons = document.querySelectorAll('.action-card .icon, .activity-icon');
+                icons.forEach((icon, index) => {
+                    icon.style.animation = `float ${3 + index * 0.5}s ease-in-out infinite`;
+                });
+
+                // Add float keyframes
+                const floatStyle = document.createElement('style');
+                floatStyle.textContent = `
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0px) rotate(0deg); }
+                        50% { transform: translateY(-10px) rotate(2deg); }
+                    }
+                `;
+                document.head.appendChild(floatStyle);
+
+            {% endif %}
+
+            // Enhanced login card animations
+            const loginCard = document.querySelector('.login-card');
+            if (loginCard) {
+                // Add particle effect
+                function createParticle() {
+                    const particle = document.createElement('div');
+                    particle.style.cssText = `
+                        position: absolute;
+                        width: 4px;
+                        height: 4px;
+                        background: #667eea;
+                        border-radius: 50%;
+                        pointer-events: none;
+                        animation: particle 3s linear infinite;
+                    `;
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 3 + 's';
+                    loginCard.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 3000);
+                }
+
+                // Create particles periodically
+                setInterval(createParticle, 500);
+
+                // Add particle animation
+                const particleStyle = document.createElement('style');
+                particleStyle.textContent = `
+                    @keyframes particle {
+                        0% { opacity: 0; transform: translateY(100px); }
+                        50% { opacity: 1; }
+                        100% { opacity: 0; transform: translateY(-100px); }
+                    }
+                `;
+                document.head.appendChild(particleStyle);
+            }
+        });
+    </script>
+
+    <!-- Include modals -->
+    {% include 'modals.html' %}
+</body>
+</html>
