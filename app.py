@@ -71,7 +71,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(64), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    books = db.relationship('Book', backref='owner', lazy=True)
+    books = db.relationship('Book', backref='owner', lazy=True, cascade='all, delete-orphan')
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -116,39 +116,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(fn):
     return "." in fn and fn.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def init_db():
-    """Initialize SQLite database for backward compatibility"""
-    db_path = get_db_path()
-    if not os.path.exists(os.path.dirname(db_path)):
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    
-    conn = sqlite3.connect(db_path)
-    try:
-        conn.executescript("""
-        CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY, username TEXT UNIQUE,
-            email TEXT UNIQUE, password TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS books(
-            id INTEGER PRIMARY KEY, title TEXT, author TEXT,
-            isbn TEXT, description TEXT, filename TEXT,
-            filepath TEXT, user_id INTEGER,
-            upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS downloads(
-            id INTEGER PRIMARY KEY, book_id INTEGER, user_id INTEGER,
-            download_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS reviews(
-            id INTEGER PRIMARY KEY, book_id TEXT, user_id INTEGER,
-            rating INTEGER, review_text TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """)
-        conn.commit()
-    finally:
-        conn.close()
+# ✅ CREATE TABLES FUNCTION - Use this once to create tables
+def create_tables():
+    """Create tables in current database (SQLite locally, PostgreSQL on Render)"""
+    with app.app_context():
+        db.create_all()
+        print(f"✅ Tables created in {app.config['SQLALCHEMY_DATABASE_URI'][:20]}...")
 
 # Initialize admin tables
 try:
@@ -157,9 +130,6 @@ try:
     print("Admin database initialized")
 except ImportError:
     print("Admin utils not found - admin functionality will be limited")
-
-# Initialize database
-init_db()
 
 # Email Functions
 def send_welcome_email(email, username):
@@ -325,7 +295,7 @@ def search_open_library(q, limit=10, page=1):
 def search_gutendx(q, limit=10):
     """Gutendx (Project Gutenberg public-domain ebooks)."""
     try:
-        r = requests.get("https://gutendex.com/books", params={"search": q}, timeout=8)
+        r = requests.get("https://gutendx.com/books", params={"search": q}, timeout=8)
         r.raise_for_status()
         data = r.json()
 
@@ -445,14 +415,13 @@ def get_nyt_books_cached(query=None, limit=10):
 def get_book_reviews(book_id):
     """Get reviews for a specific book from database."""
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            rows = db.execute(
-                "SELECT u.username, r.rating, r.review_text FROM reviews r "
-                "JOIN users u ON r.user_id = u.id "
-                "WHERE r.book_id = ? ORDER BY r.created_at DESC LIMIT 3",
-                (str(book_id),)
-            ).fetchall()
-            return [{"username": row[0], "rating": row[1], "text": row[2]} for row in rows]
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        reviews = Review.query.join(User, Review.user_id == User.id)\
+                             .filter(Review.book_id == str(book_id))\
+                             .order_by(Review.created_at.desc())\
+                             .limit(3).all()
+        return [{"username": r.user.username, "rating": r.rating, "text": r.review_text} 
+                for r in reviews if hasattr(r, 'user')]
     except Exception as e:
         print(f"Error fetching reviews: {e}")
         return []
@@ -508,17 +477,17 @@ def home():
     featured = search_google_books("bestseller fiction", 6)
     uploaded = []
     try:
-        with sqlite3.connect(get_db_path()) as c:
-            rows = c.execute(
-                "SELECT b.*, u.username FROM books b JOIN users u ON b.user_id=u.id "
-                "ORDER BY b.upload_date DESC LIMIT 6"
-            ).fetchall()
-            
-            uploaded = [dict(
-                id=r[0], title=r[1], author=r[2], isbn=r[3] or "", description=r[4],
-                filename=r[5], filepath=r[6], user_id=r[7], upload_date=r[8],
-                uploader=r[9], source="uploaded"
-            ) for r in rows]
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        books = Book.query.join(User, Book.user_id == User.id)\
+                         .order_by(Book.upload_date.desc())\
+                         .limit(6).all()
+        uploaded = [
+            dict(
+                id=b.id, title=b.title, author=b.author, isbn=b.isbn or "", description=b.description,
+                filename=b.filename, filepath=b.filepath, user_id=b.user_id, upload_date=b.upload_date,
+                uploader=b.owner.username if b.owner else "", source="uploaded"
+            ) for b in books
+        ]
             
     except Exception as e:
         print("DB error:", e)
@@ -542,20 +511,31 @@ def register():
     pw_hash = hashlib.sha256(p.encode()).hexdigest()
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            db.execute("INSERT INTO users(username,email,password) VALUES(?,?,?)", (u, e, pw_hash))
-            db.commit()
+        new_user = User(username=u, email=e, password=pw_hash)
+        db.session.add(new_user)
+        db.session.commit()
 
         # Send welcome email
         send_welcome_email(e, u)
 
         return jsonify(success=True, message="Account created! Please log in.")
 
-    except sqlite3.IntegrityError:
-        return jsonify(success=False, message="Username or email exists")
     except Exception as err:
-        print("Register error:", err)
-        return jsonify(success=False, message="Registration failed")
+        db.session.rollback()
+        # ✅ ENHANCED ERROR LOGGING
+        import traceback
+        error_details = str(err)
+        print(f"❌ Registration error: {error_details}")
+        print(f"❌ Full traceback: {traceback.format_exc()}")
+        
+        # Check for specific errors
+        if 'UNIQUE constraint failed' in error_details or 'duplicate key value violates unique constraint' in error_details:
+            return jsonify(success=False, message="Username or email already exists")
+        elif 'no such table' in error_details.lower():
+            return jsonify(success=False, message="Database tables not created. Contact admin.")
+        else:
+            return jsonify(success=False, message=f"Registration error: {error_details}")
+
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -572,12 +552,12 @@ def login():
     pw_hash = hashlib.sha256(p.encode()).hexdigest()
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT id,username FROM users WHERE email=? AND password=?", (e, pw_hash)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        user = User.query.filter_by(email=e, password=pw_hash).first()
 
-        if row:
-            session["user_id"] = row[0]
-            session["username"] = row[1]
+        if user:
+            session["user_id"] = user.id
+            session["username"] = user.username
             
             # If there was a search query, redirect back to search results
             if search_query:
@@ -634,13 +614,11 @@ def upload_page_or_handler():
 
     try:
         f.save(path)
-        with sqlite3.connect(get_db_path()) as db:
-            db.execute(
-                "INSERT INTO books(title,author,isbn,description,filename,filepath,user_id) "
-                "VALUES (?,?,?,?,?,?,?)",
-                (title, author, isbn, desc, unique, path, session["user_id"])
-            )
-            db.commit()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        new_book = Book(title=title, author=author, isbn=isbn, description=desc,
+                       filename=unique, filepath=path, user_id=session["user_id"])
+        db.session.add(new_book)
+        db.session.commit()
 
         return jsonify(success=True, message="Book uploaded successfully!", redirect=url_for("my_books"))
 
@@ -659,38 +637,29 @@ def my_books():
     user_id = session["user_id"]
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            rows = db.execute(
-                "SELECT b.*, u.username FROM books b JOIN users u ON b.user_id=u.id WHERE b.user_id=? ORDER BY b.upload_date DESC",
-                (user_id,)
-            ).fetchall()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        user = User.query.get(user_id)
+        if not user:
+            raise Exception("User not found")
 
-            book_list = [
-                dict(id=row[0], title=row[1], author=row[2], isbn=row[3] or "",
-                    description=row[4], filename=row[5], filepath=row[6],
-                    user_id=row[7], upload_date=row[8], uploader=row[9], source="uploaded"
-                ) for row in rows
-            ]
+        book_list = [
+            dict(id=b.id, title=b.title, author=b.author, isbn=b.isbn or "",
+                description=b.description, filename=b.filename, filepath=b.filepath,
+                user_id=b.user_id, upload_date=b.upload_date, uploader=user.username, source="uploaded"
+            ) for b in user.books
+        ]
 
-            uploaded_books_count = len(book_list)
-            total_books_count = db.execute("SELECT COUNT(*) FROM books").fetchone()[0]
-            downloads_count = db.execute("SELECT COUNT(*) FROM downloads WHERE user_id=?", (user_id,)).fetchone()[0]
+        uploaded_books_count = len(book_list)
+        total_books_count = Book.query.count()
+        downloads_count = Download.query.filter_by(user_id=user_id).count()
 
-            created_row = db.execute("SELECT created_at FROM users WHERE id=?", (user_id,)).fetchone()
-            if created_row and created_row[0]:
-                try:
-                    created_date = datetime.strptime(created_row[0], "%Y-%m-%d %H:%M:%S")
-                    days_since_joined = (datetime.now() - created_date).days
-                except Exception:
-                    days_since_joined = 0
-            else:
-                days_since_joined = 0
+        days_since_joined = (datetime.now() - user.created_at).days if user.created_at else 0
 
-            return render_template(
-                "mybooks.html", books=book_list, uploaded_books_count=uploaded_books_count,
-                total_books_count=total_books_count, downloads_count=downloads_count,
-                days_since_joined=days_since_joined
-            )
+        return render_template(
+            "mybooks.html", books=book_list, uploaded_books_count=uploaded_books_count,
+            total_books_count=total_books_count, downloads_count=downloads_count,
+            days_since_joined=days_since_joined
+        )
 
     except Exception as e:
         print("my_books error:", e)
@@ -728,23 +697,20 @@ def search():
     local_results = []
     if not sources_selected or "uploaded" in sources_selected:
         try:
-            with sqlite3.connect(get_db_path()) as db:
-                like = f"%{query}%"
-                rows = db.execute(
-                    "SELECT b.*, u.username FROM books b JOIN users u ON b.user_id=u.id "
-                    "WHERE (b.title LIKE ? OR b.author LIKE ? OR b.description LIKE ?) "
-                    "ORDER BY b.upload_date DESC",
-                    (like, like, like)
-                ).fetchall()
+            # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+            like = f"%{query}%"
+            books = Book.query.join(User, Book.user_id == User.id).filter(
+                (Book.title.ilike(like)) | (Book.author.ilike(like)) | (Book.description.ilike(like))
+            ).order_by(Book.upload_date.desc()).all()
 
-                local_results = [
-                    dict(id=r[0], title=r[1], author=r[2], isbn=r[3] or "",
-                        description=r[4], filename=r[5], filepath=r[6], user_id=r[7],
-                        upload_date=r[8], uploader=r[9], thumbnail="", published_date="",
-                        page_count=0, preview_link=url_for("download_book", book_id=r[0]),
-                        info_link="", isbn13="", price="", price_value=0, rating=0, source="uploaded"
-                    ) for r in rows
-                ]
+            local_results = [
+                dict(id=b.id, title=b.title, author=b.author, isbn=b.isbn or "",
+                    description=b.description, filename=b.filename, filepath=b.filepath, user_id=b.user_id,
+                    upload_date=b.upload_date, uploader=b.owner.username if b.owner else "", thumbnail="", published_date="",
+                    page_count=0, preview_link=url_for("download_book", book_id=b.id),
+                    info_link="", isbn13="", price="", price_value=0, rating=0, source="uploaded"
+                ) for b in books
+            ]
         except Exception as e:
             print("Local search error:", e)
             local_results = []
@@ -774,13 +740,11 @@ def add_free_book():
         return jsonify(success=False, message="Invalid request")
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            db.execute(
-                "INSERT INTO books(title,author,isbn,description,filename,filepath,user_id) "
-                "VALUES (?,?,?,?,?,?,?)",
-                (title, author, "", description, "", download_url, session["user_id"])
-            )
-            db.commit()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        new_book = Book(title=title, author=author, isbn="", description=description,
+                       filename="", filepath=download_url, user_id=session["user_id"])
+        db.session.add(new_book)
+        db.session.commit()
         return jsonify(success=True, message="Added to My Books")
     except Exception as e:
         print("add_free_book error:", e)
@@ -789,26 +753,24 @@ def add_free_book():
 @app.route("/download/<int:book_id>")
 def download_book(book_id):
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT filepath, filename FROM books WHERE id=?", (book_id,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        book = Book.query.get(book_id)
 
-        if not row:
+        if not book:
             return "File not found", 404
 
-        filepath, filename = row
-
-        if not filepath or not os.path.exists(filepath):
+        if not book.filepath or not os.path.exists(book.filepath):
             return "File missing on server", 404
 
         if "user_id" in session:
             try:
-                with sqlite3.connect(get_db_path()) as db:
-                    db.execute("INSERT INTO downloads(book_id,user_id) VALUES(?,?)", (book_id, session["user_id"]))
-                    db.commit()
+                new_download = Download(book_id=book_id, user_id=session["user_id"])
+                db.session.add(new_download)
+                db.session.commit()
             except Exception:
                 pass
 
-        return send_file(filepath, as_attachment=True, download_name=filename)
+        return send_file(book.filepath, as_attachment=True, download_name=book.filename)
 
     except Exception as e:
         print("download_book error:", e)
@@ -820,24 +782,22 @@ def delete_book(book_id):
         return jsonify(success=False, message="Please log in")
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT filepath, user_id FROM books WHERE id=?", (book_id,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        book = Book.query.get(book_id)
 
-        if not row:
+        if not book:
             return jsonify(success=False, message="Book not found")
 
-        filepath, owner_id = row
-
-        if owner_id != session["user_id"]:
+        if book.user_id != session["user_id"]:
             return jsonify(success=False, message="You are not the owner")
 
-        if filepath and os.path.exists(filepath):
-            os.remove(filepath)
+        if book.filepath and os.path.exists(book.filepath):
+            os.remove(book.filepath)
 
-        with sqlite3.connect(get_db_path()) as db:
-            db.execute("DELETE FROM books WHERE id=?", (book_id,))
-            db.execute("DELETE FROM downloads WHERE book_id=?", (book_id,))
-            db.commit()
+        # Delete related downloads
+        Download.query.filter_by(book_id=book_id).delete()
+        db.session.delete(book)
+        db.session.commit()
 
         return jsonify(success=True, message="Book deleted")
 
@@ -859,17 +819,17 @@ def forgot_password():
         return render_template('forgot_password.html')
 
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT id, username FROM users WHERE email=?", (email,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        user = User.query.filter_by(email=email).first()
 
-        if row:
+        if user:
             token = secrets.token_urlsafe(32)
             reset_tokens[token] = {
-                'user_id': row[0],
+                'user_id': user.id,
                 'email': email,
                 'expires': datetime.utcnow() + timedelta(hours=1)
             }
-            send_password_reset_email(email, row[1], token)
+            send_password_reset_email(email, user.username, token)
 
         flash('If the email exists, a reset link was sent.', 'info')
         return redirect(url_for('home'))
@@ -905,10 +865,11 @@ def reset_password(token):
         pw_hash = hashlib.sha256(new_password.encode()).hexdigest()
         
         try:
-            with sqlite3.connect(get_db_path()) as db:
-                db.execute("UPDATE users SET password = ? WHERE id = ?", 
-                          (pw_hash, token_data['user_id']))
-                db.commit()
+            # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+            user = User.query.get(token_data['user_id'])
+            if user:
+                user.password = pw_hash
+                db.session.commit()
             
             reset_tokens.pop(token, None)
             flash('Password reset successful! Please log in with your new password.', 'success')
@@ -929,24 +890,22 @@ def read_book(book_id):
         return redirect(url_for("home"))
     
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT id, title, filename, filepath FROM books WHERE id=?", (book_id,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        book = Book.query.get(book_id)
 
-        if not row:
+        if not book:
             return "Book not found", 404
 
-        book_id, title, filename, filepath = row
-        
-        if not filename:
+        if not book.filename:
             return "No file attached to this book", 400
             
-        file_extension = filename.lower().split('.')[-1]
+        file_extension = book.filename.lower().split('.')[-1]
 
         # Route to appropriate reader based on file type
         if file_extension == 'epub':
-            return render_template("epub_reader.html", book_id=book_id, title=title)
+            return render_template("epub_reader.html", book_id=book_id, title=book.title)
         elif file_extension == 'pdf':
-            return render_template("pdf_viewer.html", book_id=book_id, title=title)
+            return render_template("pdf_viewer.html", book_id=book_id, title=book.title)
         else:
             return f"Unsupported file format: {file_extension}", 400
 
@@ -958,21 +917,19 @@ def read_book(book_id):
 def serve_epub(book_id):
     """Serve EPUB files for the reader"""
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT filepath, filename FROM books WHERE id=?", (book_id,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        book = Book.query.get(book_id)
 
-        if not row:
+        if not book:
             return "EPUB file not found", 404
 
-        filepath, filename = row
-
-        if not filepath or not os.path.exists(filepath):
+        if not book.filepath or not os.path.exists(book.filepath):
             return "EPUB file missing on server", 404
 
-        if not filename.lower().endswith('.epub'):
+        if not book.filename.lower().endswith('.epub'):
             return "This is not an EPUB file", 400
 
-        return send_file(filepath, as_attachment=False, mimetype='application/epub+zip')
+        return send_file(book.filepath, as_attachment=False, mimetype='application/epub+zip')
 
     except Exception as e:
         print("serve_epub error:", e)
@@ -982,21 +939,19 @@ def serve_epub(book_id):
 def serve_pdf(book_id):
     """Serve PDF files for the viewer"""
     try:
-        with sqlite3.connect(get_db_path()) as db:
-            row = db.execute("SELECT filepath, filename FROM books WHERE id=?", (book_id,)).fetchone()
+        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
+        book = Book.query.get(book_id)
 
-        if not row:
+        if not book:
             return "PDF file not found", 404
 
-        filepath, filename = row
-
-        if not filepath or not os.path.exists(filepath):
+        if not book.filepath or not os.path.exists(book.filepath):
             return "PDF file missing on server", 404
 
-        if not filename.lower().endswith('.pdf'):
+        if not book.filename.lower().endswith('.pdf'):
             return "This is not a PDF file", 400
 
-        return send_file(filepath, as_attachment=False, mimetype='application/pdf')
+        return send_file(book.filepath, as_attachment=False, mimetype='application/pdf')
 
     except Exception as e:
         print("serve_pdf error:", e)
@@ -1033,14 +988,8 @@ try:
 except ImportError:
     print("Admin blueprint not found - admin functionality will not be available")
 
-# ✅ REMOVED THE PROBLEMATIC db.create_all() CALL TO PREVENT DATA LOSS
-# Initialize SQLAlchemy database - COMMENTED OUT FOR PRODUCTION
-# with app.app_context():
-#     try:
-#         db.create_all()
-#         print("✅ SQLAlchemy database created successfully!")
-#     except Exception as e:
-#         print(f"❌ Database creation failed: {e}")
+# ✅ ONE-TIME TABLE CREATION - Uncomment this ONCE to create tables
+create_tables()  # UNCOMMENTED FOR FIRST RUN
 
 # ───────── RUN ─────────
 
