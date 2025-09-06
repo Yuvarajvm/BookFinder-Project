@@ -2,7 +2,7 @@ BookFinder
 A Flask web app to search books via Google Books and browse community uploads.
 
 Features
-Search books (Google Books API)
+Search books (Google Books API ,Open Library,Project Gutendx and other Multiple Sources)
 
 Featured books carousel on home page
 
@@ -47,5 +47,6 @@ instance/bookfinder.db (auto-created)
 
 Notes
 No API key needed for basic Google Books search.
+
 
 For production: set a strong SECRET_KEY, consider PostgreSQL, and configure email for password reset.
