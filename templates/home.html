@@ -46,32 +46,31 @@
             padding: 0 2rem;
         }
 
-       /* Logo styles */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #667eea;
-    transition: all 0.3s ease;
-}
+        /* Logo styles */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
 
-.logo-img {
-    width: 40px;
-    height: 40px;
-    transition: all 0.3s ease;
-}
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s ease;
+        }
 
-.logo:hover {
-    transform: scale(1.05);
-    text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-}
+        .logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
 
-.logo:hover .logo-img {
-    transform: rotate(5deg) scale(1.1);
-}
-
+        .logo:hover .logo-img {
+            transform: rotate(5deg) scale(1.1);
+        }
 
         .nav-links {
             display: flex;
@@ -143,6 +142,87 @@
             color: white !important;
         }
 
+        /* HAMBURGER MENU STYLES - ONLY ADDITION */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            width: 30px;
+            height: 22px;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .hamburger span {
+            display: block;
+            height: 4px;
+            background: #667eea;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            padding-top: 80px;
+            transition: right 0.3s ease;
+            z-index: 999;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        }
+.mobile-nav {
+    background: linear-gradient(135deg, #9b90c6ff 0%, #a7b7d2ff 100%);
+    color: #333;
+}
+
+        .mobile-nav.active {
+            right: 0;
+        }
+
+        .mobile-nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 15px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { 
+                display: none; 
+            }
+            .hamburger { 
+                display: flex; 
+            }
+        }
+
+        /* ALL YOUR EXISTING STYLES CONTINUE HERE - UNCHANGED */
         .hero {
             text-align: center;
             padding: 6rem 2rem;
@@ -244,7 +324,7 @@
             left: 100%;
         }
 
-        /* Featured Books Carousel - Option 2 */
+        /* Featured Books Carousel */
         .featured-section {
             background: transparent;
             padding: 60px 0;
@@ -749,13 +829,25 @@
     <div class="particles" id="particles"></div>
     
     <header class="header">
+        <!-- Mobile Navigation Menu -->
+        <nav class="mobile-nav" id="mobileNav">
+            <a href="/" class="mobile-nav-link">Home</a>
+            <a href="/contact" class="mobile-nav-link">Contact</a>
+            {% if session.user_id %}
+                <a href="/my-books" class="mobile-nav-link">My Books</a>
+                <a href="/logout" class="mobile-nav-link">Logout</a>
+            {% else %}
+                <a href="#" class="mobile-nav-link" onclick="showModal('loginModal')">Login</a>
+            {% endif %}
+        </nav>
+
         <div class="nav-container">
            <div class="logo">
-    <a href="{{ url_for('home') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
-        <img src="/static/images/bookfinder-logo.png" alt="BookFinder Logo" class="logo-img">
-        <span>BookFinder</span>
-    </a>
-</div>
+                <a href="{{ url_for('home') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                    <img src="/static/images/bookfinder-logo.png" alt="BookFinder Logo" class="logo-img">
+                    <span>BookFinder</span>
+                </a>
+            </div>
 
             <nav class="nav-links">
                 <a href="{{ url_for('home') }}">Home</a>
@@ -773,6 +865,13 @@
                     <button onclick="showModal('loginModal')" class="nav-login-btn">Login</button>
                 {% endif %}
             </nav>
+
+            <!-- HAMBURGER BUTTON - ONLY ADDITION -->
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
     </header>
 
@@ -979,6 +1078,32 @@
                     });
                 }
             };
+
+            // HAMBURGER MENU FUNCTIONALITY - ONLY ADDITION
+            const hamburger = document.getElementById('hamburger');
+            const mobileNav = document.getElementById('mobileNav');
+
+            if (hamburger && mobileNav) {
+                hamburger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    hamburger.classList.toggle('active');
+                    mobileNav.classList.toggle('active');
+                });
+
+                mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+                    link.addEventListener('click', function() {
+                        hamburger.classList.remove('active');
+                        mobileNav.classList.remove('active');
+                    });
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        mobileNav.classList.remove('active');
+                    }
+                });
+            }
         });
 
         function showModal(modalId) {
