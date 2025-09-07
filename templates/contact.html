@@ -351,15 +351,104 @@
     text-decoration: none;
     color: white !important;
 }
+/* HAMBURGER MENU STYLES */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 2000;
+    padding: 0.5rem;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background: #667eea;
+    margin: 3px 0;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 70px;
+        right: -100%;
+        width: 100%;
+        height: calc(100vh - 70px);
+        background: rgba(255, 255, 255, 0.95);
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding-top: 2rem;
+        transition: right 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .nav-links a {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
+        width: 80%;
+        text-align: center;
+    }
+}
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #667eea;
+    font-weight: 700;
+    font-size: 1.6rem;
+}
+
+.logo-img {
+    width: 40px;
+    height: 40px;
+}
 
     </style>
 </head>
 <body>
     <header class="header">
+        <!-- Add this inside your header navigation container -->
+<div class="hamburger" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
         <div class="nav-container">
-            <div class="logo">
-                <a href="{{ url_for('home') }}">BookFinder</a>
-            </div>
+           <div class="logo">
+    <a href="{{ url_for('home') }}">
+        <img src="/static/images/bookfinder-logo.png" alt="BookFinder" class="logo-img">
+        <span>BookFinder</span>
+    </a>
+</div>
+
           <nav class="nav-links">
     <a href="{{ url_for('home') }}">Home</a>
     {% if session.user_id %}
@@ -424,15 +513,15 @@
                     <div class="contact-icon">📧</div>
                     <div class="contact-details">
                         <h3>Email</h3>
-                        <p>support@bookfinder.com</p>
+                        <p>bookfinder.noreply@gmail.com</p>
                     </div>
                 </div>
 
                 <div class="contact-item">
                     <div class="contact-icon">📱</div>
                     <div class="contact-details">
-                        <h3>Phone</h3>
-                        <p>+1 (555) 123-4567</p>
+                        <h3>Instagram</h3>
+                        <p>@bookfinder.me</p>
                     </div>
                 </div>
 
@@ -440,7 +529,7 @@
                     <div class="contact-icon">📍</div>
                     <div class="contact-details">
                         <h3>Address</h3>
-                        <p>123 Book Street<br>Reading City, RC 12345</p>
+                        <p>RGM College<br>Nandyal City, Pin-518501</p>
                     </div>
                 </div>
 
@@ -666,6 +755,15 @@
                 }
             });
         });
+        // HAMBURGER MENU FUNCTION
+function toggleMenu() {
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    
+    hamburger.classList.toggle('active');
+    navLinks.classList.toggle('active');
+}
+
     </script>
 
     <!-- Include modals -->
