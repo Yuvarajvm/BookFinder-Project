@@ -185,30 +185,43 @@ BookFinder Team"""
 # ───────────────────── EXTERNAL SOURCES ───────────────────────────
 
 def search_google_books(q, max_results=50):
-    """Google Books — no key needed for basic search."""
+    """Google Books API with optional API key support"""
     try:
-        data = requests.get(
-            "https://www.googleapis.com/books/v1/volumes",
-            params={"q": q, "maxResults": max_results, "printType": "books"},
-            timeout=10
-        ).json()
+        params = {
+            "q": q,
+            "maxResults": max_results,
+            "printType": "books"
+        }
+        
+        # Add API key if available in environment
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if api_key:
+            params["key"] = api_key
 
-        books = []
+        response = requests.get(
+            "https://www.googleapis.com/books/v1/volumes",
+            params=params,
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        books = []  # ✅ Initialize books variable before use
         for it in data.get("items", []):
             v = it.get("volumeInfo", {})
             desc_raw = v.get("description") or "No description"
             desc = (desc_raw[:300] + "...") if len(desc_raw) > 300 else desc_raw
+            
             thumb = (v.get("imageLinks", {}) or {}).get("thumbnail", "")
             if thumb.startswith("http:"):
                 thumb = thumb.replace("http:", "https:")
 
-            # Price (if available)
+            # Price information
             sale = it.get("saleInfo", {}) or {}
             list_price = (sale.get("listPrice") or {})
             price_amount = list_price.get("amount")
             price_currency = list_price.get("currencyCode")
-            price_str = f"{price_amount} {price_currency}" if (price_amount is not None and price_currency) else ""
-            rating = v.get("averageRating", 0)
+            price_str = f"{price_amount} {price_currency}" if (price_amount and price_currency) else ""
 
             books.append({
                 "id": it.get("id", ""),
@@ -223,7 +236,7 @@ def search_google_books(q, max_results=50):
                 "isbn13": "",
                 "price": price_str,
                 "price_value": price_amount or 0,
-                "rating": rating,
+                "rating": v.get("averageRating", 0),
                 "filename": "",
                 "filepath": "",
                 "source": "google_books",
@@ -232,11 +245,12 @@ def search_google_books(q, max_results=50):
         return books
 
     except Exception as e:
-        print("Google Books error:", e)
+        print(f"Google Books error: {e}")
         return []
 
+
 def search_open_library(q, limit=10, page=1):
-    """Open Library works search with preview support."""
+    """Open Library search with bulletproof error handling"""
     try:
         params = {
             "q": q,
@@ -248,54 +262,86 @@ def search_open_library(q, limit=10, page=1):
         r.raise_for_status()
         data = r.json()
 
-        results = []
+        results = []  # ✅ Initialize results variable before use
         for d in data.get("docs", []):
-            authors = d.get("author_name") or []
-            cover = f"https://covers.openlibrary.org/b/id/{d['cover_i']}-M.jpg" if d.get("cover_i") else ""
-            isbn_list = d.get("isbn") or []
-            isbn13 = next((i for i in isbn_list if len(i) == 13), "")
+            try:
+                # Safe author processing
+                authors = d.get("author_name") or []
+                author_str = ", ".join(authors) if authors else "Unknown Author"
+                
+                # Safe cover processing
+                cover_id = d.get("cover_i")
+                cover = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else ""
+                
+                # Safe ISBN processing
+                isbn_list = d.get("isbn") or []
+                isbn13 = ""
+                if isbn_list:
+                    for isbn in isbn_list:
+                        if isinstance(isbn, str) and len(isbn) == 13:
+                            isbn13 = isbn
+                            break
 
-            publish_year = d.get("first_publish_year")
-            if isinstance(publish_year, (int, float)):
-                publish_date = str(int(publish_year))
-            else:
-                publish_date = str(publish_year) if publish_year else ""
+                # ✅ Safe publish_year processing (fixes string vs int error)
+                publish_year = d.get("first_publish_year")
+                if isinstance(publish_year, (int, float)):
+                    publish_date = str(int(publish_year))
+                elif isinstance(publish_year, str) and publish_year.isdigit():
+                    publish_date = str(int(publish_year))
+                else:
+                    publish_date = ""
 
-            ia_list = d.get("ia") or []
-            has_fulltext = d.get("has_fulltext", False)
-            public_scan = d.get("public_scan_b", False)
-            preview_available = bool(ia_list and (has_fulltext or public_scan))
-            preview_link = f"<https://archive.org/details/{ia_list>[0]}" if preview_available else ""
+                # ✅ Safe preview link processing (fixes list index error)
+                ia_list = d.get("ia") or []
+                has_fulltext = d.get("has_fulltext", False)
+                public_scan = d.get("public_scan_b", False)
+                
+                preview_link = ""
+                if ia_list and isinstance(ia_list, list) and len(ia_list) > 0:
+                    if has_fulltext or public_scan:
+                        preview_link = f"<https://archive.org/details/{ia_list>[0]}"
 
-            results.append({
-                "id": d.get("key", ""),
-                "title": d.get("title", "Unknown Title"),
-                "author": ", ".join(authors) if authors else "Unknown Author",
-                "description": "Available on Open Library",
-                "thumbnail": cover,
-                "published_date": publish_date,
-                "page_count": 0,
-                "preview_link": preview_link,
-                "info_link": f"https://openlibrary.org{d.get('key')}" if d.get("key") else "",
-                "isbn13": isbn13,
-                "price": "",
-                "price_value": 0,
-                "rating": 0,
-                "filename": "",
-                "filepath": "",
-                "source": "openlibrary"
-            })
+                # Safe info link processing
+                book_key = d.get("key", "")
+                info_link = f"https://openlibrary.org{book_key}" if book_key else ""
+
+                results.append({
+                    "id": book_key,
+                    "title": d.get("title", "Unknown Title"),
+                    "author": author_str,
+                    "description": "Available on Open Library",
+                    "thumbnail": cover,
+                    "published_date": publish_date,
+                    "page_count": 0,
+                    "preview_link": preview_link,
+                    "info_link": info_link,
+                    "isbn13": isbn13,
+                    "price": "",
+                    "price_value": 0,
+                    "rating": 0,
+                    "filename": "",
+                    "filepath": "",
+                    "source": "openlibrary"
+                })
+                
+            except Exception:
+                # Continue processing other books instead of failing completely
+                continue
 
         return results
 
     except Exception as e:
-        print("Open Library error:", e)
+        print(f"Open Library error: {e}")
         return []
 
+
+
+
 def search_gutendx(q, limit=10):
-    """Gutendx (Project Gutenberg public-domain ebooks)."""
+    """Gutendx (Project Gutenberg public-domain ebooks) - CORRECT URL"""
     try:
-        r = requests.get("https://gutendx.com/books", params={"search": q}, timeout=8)
+        # ✅ CORRECT URL: https://gutendx.com (not gutendx.org or gutendx.com)
+        r = requests.get("https://gutendex.com/books", params={"search": q}, timeout=8)
         r.raise_for_status()
         data = r.json()
 
@@ -327,11 +373,14 @@ def search_gutendx(q, limit=10):
                 "source": "gutendx"
             })
 
+        print(f"✅ Gutendx: Found {len(out)} books")
         return out
 
     except Exception as e:
-        print("Gutendx error:", e)
+        print(f"❌ Gutendx error: {e}")
         return []
+
+
 
 def search_nyt_books(query=None, limit=10):
     """NYT Books API with retry logic for rate limiting"""
@@ -456,19 +505,31 @@ def merge_results(*lists):
     return merged
 
 def sort_results(results, sort_by):
-    """Sort results based on sort_by parameter."""
-    if sort_by == "price_low":
-        return sorted(results, key=lambda x: x.get("price_value", 0))
-    elif sort_by == "price_high":
-        return sorted(results, key=lambda x: x.get("price_value", 0), reverse=True)
-    elif sort_by == "rating":
-        return sorted(results, key=lambda x: x.get("rating", 0), reverse=True)
-    elif sort_by == "new":
-        return sorted(results, key=lambda x: x.get("published_date", ""), reverse=True)
-    elif sort_by == "discount":
-        return sorted(results, key=lambda x: (x.get("price_value", 0) == 0, -x.get("price_value", 0)), reverse=True)
-    else:
-        return results
+    """Sort results based on sort_by parameter with type safety."""
+    try:
+        if sort_by == "price_low":
+            return sorted(results, key=lambda x: float(x.get("price_value", 0) or 0))
+        elif sort_by == "price_high":
+            return sorted(results, key=lambda x: float(x.get("price_value", 0) or 0), reverse=True)
+        elif sort_by == "rating":
+            return sorted(results, key=lambda x: float(x.get("rating", 0) or 0), reverse=True)
+        elif sort_by == "new":
+            # ✅ FIX: Safe date comparison
+            def safe_date_key(x):
+                date_str = x.get("published_date", "")
+                try:
+                    return int(date_str) if date_str and date_str.isdigit() else 0
+                except (ValueError, TypeError):
+                    return 0
+            return sorted(results, key=safe_date_key, reverse=True)
+        elif sort_by == "discount":
+            return sorted(results, key=lambda x: (float(x.get("price_value", 0) or 0) == 0, -float(x.get("price_value", 0) or 0)), reverse=True)
+        else:
+            return results
+    except Exception as e:
+        print(f"Sorting error: {e}")
+        return results  # Return unsorted if sorting fails
+
 
 # ───────────────────── ROUTES ─────────────────────────────
 
@@ -687,17 +748,44 @@ def search():
             total_results=0
         )
 
-    # External sources
-    google_results = search_google_books(query, 20) if not sources_selected or "google_books" in sources_selected else []
-    openlib_results = search_open_library(query, limit=10) if not sources_selected or "openlibrary" in sources_selected else []
-    gutendx_results = search_gutendx(query, limit=10) if not sources_selected or "gutendx" in sources_selected else []
-    nyt_results = search_nyt_books(query, limit=8) if not sources_selected or "nyt" in sources_selected else []
+    # ✅ FIX: Enhanced API calls with better error handling
+    google_results = []
+    openlib_results = []
+    gutendx_results = []
+    nyt_results = []
 
-    # Local DB search
+    try:
+        if not sources_selected or "google_books" in sources_selected:
+            google_results = search_google_books(query, 20)
+            print(f"✅ Google Books: {len(google_results)} results")
+    except Exception as e:
+        print(f"❌ Google Books error: {e}")
+
+    try:
+        if not sources_selected or "openlibrary" in sources_selected:
+            openlib_results = search_open_library(query, limit=10)
+            print(f"✅ Open Library: {len(openlib_results)} results")
+    except Exception as e:
+        print(f"❌ Open Library error: {e}")
+
+    try:
+        if not sources_selected or "gutendx" in sources_selected:
+            gutendx_results = search_gutendx(query, limit=10)
+            print(f"✅ Gutendx: {len(gutendx_results)} results")
+    except Exception as e:
+        print(f"❌ Gutendx error: {e}")
+
+    try:
+        if not sources_selected or "nyt" in sources_selected:
+            nyt_results = search_nyt_books(query, limit=8)
+            print(f"✅ NYT: {len(nyt_results)} results")
+    except Exception as e:
+        print(f"❌ NYT error: {e}")
+
+    # Local DB search (existing code continues...)
     local_results = []
     if not sources_selected or "uploaded" in sources_selected:
         try:
-            # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
             like = f"%{query}%"
             books = Book.query.join(User, Book.user_id == User.id).filter(
                 (Book.title.ilike(like)) | (Book.author.ilike(like)) | (Book.description.ilike(like))
@@ -711,11 +799,12 @@ def search():
                     info_link="", isbn13="", price="", price_value=0, rating=0, source="uploaded"
                 ) for b in books
             ]
+            print(f"✅ Local DB: {len(local_results)} results")
         except Exception as e:
-            print("Local search error:", e)
+            print(f"❌ Local search error: {e}")
             local_results = []
 
-    # Merge and sort
+    # Merge and sort (existing code continues...)
     all_results = merge_results(local_results, google_results, openlib_results, gutendx_results, nyt_results)
     sorted_results = sort_results(all_results, sort_by)
 
