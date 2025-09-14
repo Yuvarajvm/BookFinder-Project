@@ -1276,7 +1276,7 @@
                                     
                                     <div class="book-meta">
                                         <span><strong>{{ book.filename.split('.')[-1].upper() }}</strong></span>
-                                        <span>{{ book.upload_date[:10] }}</span>
+                                        <span>{{ book.upload_date.strftime('%Y-%m-%d') if book.upload_date else 'N/A' }}</span>
                                     </div>
                                     
                                     <div class="book-actions">

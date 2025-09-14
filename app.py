@@ -1,33 +1,35 @@
-# app.py — BookFinder (Google Books + Open Library + Gutendx + NYT)
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message
+# app.py — BookFinder (COMPLETE FIXED VERSION)
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, current_app
 import os
-import sqlite3
 import hashlib
 import requests
 import secrets
 import time
+import glob
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+
+# ✅ Import from centralized extensions and models
+from extensions import db, mail
+from flask_mail import Message
+from models import User, Book, Download, Review, AdminUser, AdminLog
 
 # ───────────────────────── INIT ──────────────────────────
 
 load_dotenv()
 app = Flask(__name__)
 
-# ✅ FIX: Configure DATABASE_URL before SQLAlchemy initialization
+# Database config
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
-# Configuration with Render environment detection
+# Configuration
 if os.getenv('RENDER'):
-    # Production settings (when deployed on Render)
     app.config.update(
         SECRET_KEY=os.getenv('SECRET_KEY'),
-        SQLALCHEMY_DATABASE_URI=DATABASE_URL,  # PostgreSQL on Render
+        SQLALCHEMY_DATABASE_URI=DATABASE_URL,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         MAIL_SERVER=os.getenv('MAIL_SERVER', 'smtp.gmail.com'),
         MAIL_PORT=int(os.getenv('MAIL_PORT', 587)),
@@ -36,14 +38,11 @@ if os.getenv('RENDER'):
         MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
         MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
     )
-    def get_db_path():
-        return '/tmp/bookfinder.db'  # Keep for existing SQLite functions
 else:
-    # Local development settings
     db_path = os.path.join(os.getcwd(), 'bookfinder.db')
     app.config.update(
         SECRET_KEY=os.getenv('SECRET_KEY', 'dev_secret_key'),
-        SQLALCHEMY_DATABASE_URI=DATABASE_URL or f'sqlite:///{db_path}',  # ✅ FIX: Use DATABASE_URL or fallback to SQLite
+        SQLALCHEMY_DATABASE_URI=DATABASE_URL or f'sqlite:///{db_path}',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         MAIL_SERVER='smtp.gmail.com',
         MAIL_PORT=587,
@@ -52,93 +51,84 @@ else:
         MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
         MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
     )
-    def get_db_path():
-        return db_path
 
-# Session configuration for better reliability
-app.config['SESSION_COOKIE_SECURE'] = False  # Set True in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# Initialize extensions
-mail = Mail(app)
-db = SQLAlchemy(app)
+# ✅ CRITICAL: Initialize extensions with app
+db.init_app(app)
+mail.init_app(app)
 
-# SQLAlchemy Models
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(64), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    books = db.relationship('Book', backref='owner', lazy=True, cascade='all, delete-orphan')
+# ✅ Initialize everything in app context
+with app.app_context():
+    # Create all tables
+    db.create_all()
+    print(f"✅ Tables created in {app.config['SQLALCHEMY_DATABASE_URI'][:30]}...")
+    
+    # Create default admin user
+    try:
+        existing_admin = AdminUser.query.filter_by(role='super_admin').first()
+        if not existing_admin:
+            admin_password = hashlib.sha256('admin123'.encode()).hexdigest()
+            default_admin = AdminUser(
+                admin_username='admin',
+                admin_email='admin@bookfinder.com',
+                admin_password=admin_password,
+                role='super_admin'
+            )
+            db.session.add(default_admin)
+            db.session.commit()
+            print("✅ Default admin user created (admin/admin123)")
+        print("✅ Admin database initialized")
+    except Exception as e:
+        print(f"❌ Admin init error: {e}")
 
-class Book(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    author = db.Column(db.String(200))
-    isbn = db.Column(db.String(20))
-    description = db.Column(db.Text)
-    filename = db.Column(db.String(255))
-    filepath = db.Column(db.String(255))
-    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+# ✅ Register admin blueprint
+try:
+    from admin.admin_routes import admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    print("✅ Admin blueprint registered successfully")
+except Exception as e:
+    print(f"❌ Admin blueprint error: {e}")
 
-class Download(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    book_id = db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    download_date = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Review(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    book_id = db.Column(db.String(50), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    rating = db.Column(db.Integer)
-    review_text = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-# Password Reset Tokens (in-memory for demo)
-reset_tokens = {}
-
-print(f"Secret key loaded: {app.config['SECRET_KEY'][:10]}..." if app.config['SECRET_KEY'] else "No secret key!")
-
-# ─────────────────── UPLOAD CONFIG ───────────────────────
-
+# Upload config
 UPLOAD_FOLDER = "/tmp/uploads" if os.getenv('RENDER') else "uploads"
 ALLOWED_EXTENSIONS = {"pdf", "epub"}
 MAX_FILE_SIZE = 50 * 1024 * 1024
 app.config.update(UPLOAD_FOLDER=UPLOAD_FOLDER, MAX_CONTENT_LENGTH=MAX_FILE_SIZE)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ───────────────────── HELPERS ───────────────────────────
+reset_tokens = {}
 
 def allowed_file(fn):
     return "." in fn and fn.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# ✅ CREATE TABLES FUNCTION - Use this once to create tables
-def create_tables():
-    """Create tables in current database (SQLite locally, PostgreSQL on Render)"""
-    with app.app_context():
-        db.create_all()
-        print(f"✅ Tables created in {app.config['SQLALCHEMY_DATABASE_URI'][:20]}...")
-
-# Initialize admin tables
-try:
-    from admin.admin_utils import init_admin_db
-    init_admin_db()
-    print("Admin database initialized")
-except ImportError:
-    print("Admin utils not found - admin functionality will be limited")
+# ✅ DEBUG ROUTE
+@app.route('/debug-db')
+def debug_db():
+    """Debug route to show database configuration"""
+    db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI')
+    
+    try:
+        user_count = User.query.count()
+        book_count = Book.query.count()
+        admin_count = AdminUser.query.count()
+        
+        result = f"<h2>🔧 Database Debug Info</h2>"
+        result += f"<p>URI: <code>{db_uri[:50]}...</code></p>"
+        result += f"<p>✅ Users: <strong>{user_count}</strong></p>"
+        result += f"<p>✅ Books: <strong>{book_count}</strong></p>"
+        result += f"<p>✅ Admin Users: <strong>{admin_count}</strong></p>"
+        return result
+    except Exception as e:
+        return f"<h2>❌ Database Error</h2><p>{e}</p>"
 
 # Email Functions
 def send_welcome_email(email, username):
     """Send welcome email to new users"""
     try:
-        msg = Message(
-            'Welcome to BookFinder!',
-            recipients=[email]
-        )
+        msg = Message('Welcome to BookFinder!', recipients=[email])
         msg.body = f"""Hi {username},
 
 Welcome to BookFinder! Your account has been created successfully.
@@ -158,10 +148,7 @@ def send_password_reset_email(email, username, token):
     """Send password reset email"""
     try:
         reset_url = request.url_root.rstrip('/') + f'/reset-password/{token}'
-        msg = Message(
-            'Reset Your BookFinder Password',
-            recipients=[email]
-        )
+        msg = Message('Reset Your BookFinder Password', recipients=[email])
         msg.body = f"""Hi {username},
 
 Someone requested a password reset for your BookFinder account.
@@ -182,31 +169,20 @@ BookFinder Team"""
         print(f"Email error: {e}")
         return False
 
-# ───────────────────── EXTERNAL SOURCES ───────────────────────────
-
+# External API Functions
 def search_google_books(q, max_results=50):
     """Google Books API with optional API key support"""
     try:
-        params = {
-            "q": q,
-            "maxResults": max_results,
-            "printType": "books"
-        }
-        
-        # Add API key if available in environment
+        params = {"q": q, "maxResults": max_results, "printType": "books"}
         api_key = os.getenv('GOOGLE_API_KEY')
         if api_key:
             params["key"] = api_key
 
-        response = requests.get(
-            "https://www.googleapis.com/books/v1/volumes",
-            params=params,
-            timeout=10
-        )
+        response = requests.get("https://www.googleapis.com/books/v1/volumes", params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
 
-        books = []  # ✅ Initialize books variable before use
+        books = []
         for it in data.get("items", []):
             v = it.get("volumeInfo", {})
             desc_raw = v.get("description") or "No description"
@@ -216,7 +192,6 @@ def search_google_books(q, max_results=50):
             if thumb.startswith("http:"):
                 thumb = thumb.replace("http:", "https:")
 
-            # Price information
             sale = it.get("saleInfo", {}) or {}
             list_price = (sale.get("listPrice") or {})
             price_amount = list_price.get("amount")
@@ -243,37 +218,30 @@ def search_google_books(q, max_results=50):
             })
 
         return books
-
     except Exception as e:
         print(f"Google Books error: {e}")
         return []
-
 
 def search_open_library(q, limit=10, page=1):
     """Open Library search with bulletproof error handling"""
     try:
         params = {
-            "q": q,
-            "limit": limit,
-            "page": page,
+            "q": q, "limit": limit, "page": page,
             "fields": "key,title,author_name,first_publish_year,cover_i,isbn,ia,has_fulltext,public_scan_b"
         }
         r = requests.get("https://openlibrary.org/search.json", params=params, timeout=8)
         r.raise_for_status()
         data = r.json()
 
-        results = []  # ✅ Initialize results variable before use
+        results = []
         for d in data.get("docs", []):
             try:
-                # Safe author processing
                 authors = d.get("author_name") or []
                 author_str = ", ".join(authors) if authors else "Unknown Author"
                 
-                # Safe cover processing
                 cover_id = d.get("cover_i")
                 cover = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else ""
                 
-                # Safe ISBN processing
                 isbn_list = d.get("isbn") or []
                 isbn13 = ""
                 if isbn_list:
@@ -282,7 +250,6 @@ def search_open_library(q, limit=10, page=1):
                             isbn13 = isbn
                             break
 
-                # ✅ Safe publish_year processing (fixes string vs int error)
                 publish_year = d.get("first_publish_year")
                 if isinstance(publish_year, (int, float)):
                     publish_date = str(int(publish_year))
@@ -291,7 +258,6 @@ def search_open_library(q, limit=10, page=1):
                 else:
                     publish_date = ""
 
-                # ✅ Safe preview link processing (fixes list index error)
                 ia_list = d.get("ia") or []
                 has_fulltext = d.get("has_fulltext", False)
                 public_scan = d.get("public_scan_b", False)
@@ -301,7 +267,6 @@ def search_open_library(q, limit=10, page=1):
                     if has_fulltext or public_scan:
                         preview_link = f"<https://archive.org/details/{ia_list>[0]}"
 
-                # Safe info link processing
                 book_key = d.get("key", "")
                 info_link = f"https://openlibrary.org{book_key}" if book_key else ""
 
@@ -323,24 +288,17 @@ def search_open_library(q, limit=10, page=1):
                     "filepath": "",
                     "source": "openlibrary"
                 })
-                
             except Exception:
-                # Continue processing other books instead of failing completely
                 continue
 
         return results
-
     except Exception as e:
         print(f"Open Library error: {e}")
         return []
 
-
-
-
 def search_gutendx(q, limit=10):
-    """Gutendx (Project Gutenberg public-domain ebooks) - CORRECT URL"""
+    """Gutendx (Project Gutenberg public-domain ebooks)"""
     try:
-        # ✅ CORRECT URL: https://gutendx.com (not gutendx.org or gutendx.com)
         r = requests.get("https://gutendex.com/books", params={"search": q}, timeout=8)
         r.raise_for_status()
         data = r.json()
@@ -375,12 +333,9 @@ def search_gutendx(q, limit=10):
 
         print(f"✅ Gutendx: Found {len(out)} books")
         return out
-
     except Exception as e:
         print(f"❌ Gutendx error: {e}")
         return []
-
-
 
 def search_nyt_books(query=None, limit=10):
     """NYT Books API with retry logic for rate limiting"""
@@ -405,7 +360,6 @@ def search_nyt_books(query=None, limit=10):
             
             results = []
             for book in books:
-                # Filter by query if provided
                 if query and (query.lower() not in book.get('title', '').lower() and 
                              query.lower() not in book.get('author', '').lower()):
                     continue
@@ -435,7 +389,6 @@ def search_nyt_books(query=None, limit=10):
             else:
                 print(f"❌ NYT HTTP error: {e}")
                 break
-                
         except requests.exceptions.RequestException as e:
             print(f"❌ NYT request error: {e}")
             break
@@ -443,28 +396,10 @@ def search_nyt_books(query=None, limit=10):
     print("❌ NYT: Max retries exceeded or request failed")
     return []
 
-# Cache for NYT results
-nyt_cache = {"data": None, "timestamp": 0}
-CACHE_DURATION = 300  # 5 minutes
-
-def get_nyt_books_cached(query=None, limit=10):
-    current_time = time.time()
-    
-    # Use cache if fresh
-    if nyt_cache["data"] and (current_time - nyt_cache["timestamp"]) < CACHE_DURATION:
-        books = nyt_cache["data"]
-    else:
-        # Fetch fresh data
-        books = search_nyt_books(query, limit)
-        nyt_cache["data"] = books
-        nyt_cache["timestamp"] = current_time
-    
-    return books
-
+# Helper Functions
 def get_book_reviews(book_id):
     """Get reviews for a specific book from database."""
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         reviews = Review.query.join(User, Review.user_id == User.id)\
                              .filter(Review.book_id == str(book_id))\
                              .order_by(Review.created_at.desc())\
@@ -514,7 +449,6 @@ def sort_results(results, sort_by):
         elif sort_by == "rating":
             return sorted(results, key=lambda x: float(x.get("rating", 0) or 0), reverse=True)
         elif sort_by == "new":
-            # ✅ FIX: Safe date comparison
             def safe_date_key(x):
                 date_str = x.get("published_date", "")
                 try:
@@ -528,8 +462,7 @@ def sort_results(results, sort_by):
             return results
     except Exception as e:
         print(f"Sorting error: {e}")
-        return results  # Return unsorted if sorting fails
-
+        return results
 
 # ───────────────────── ROUTES ─────────────────────────────
 
@@ -538,7 +471,6 @@ def home():
     featured = search_google_books("bestseller fiction", 6)
     uploaded = []
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         books = Book.query.join(User, Book.user_id == User.id)\
                          .order_by(Book.upload_date.desc())\
                          .limit(6).all()
@@ -549,7 +481,6 @@ def home():
                 uploader=b.owner.username if b.owner else "", source="uploaded"
             ) for b in books
         ]
-            
     except Exception as e:
         print("DB error:", e)
 
@@ -576,20 +507,14 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        # Send welcome email
         send_welcome_email(e, u)
-
         return jsonify(success=True, message="Account created! Please log in.")
 
     except Exception as err:
         db.session.rollback()
-        # ✅ ENHANCED ERROR LOGGING
-        import traceback
         error_details = str(err)
         print(f"❌ Registration error: {error_details}")
-        print(f"❌ Full traceback: {traceback.format_exc()}")
         
-        # Check for specific errors
         if 'UNIQUE constraint failed' in error_details or 'duplicate key value violates unique constraint' in error_details:
             return jsonify(success=False, message="Username or email already exists")
         elif 'no such table' in error_details.lower():
@@ -597,13 +522,11 @@ def register():
         else:
             return jsonify(success=False, message=f"Registration error: {error_details}")
 
-
 @app.route("/login", methods=["POST"])
 def login():
     e = request.form.get("email", "").strip().lower()
     p = request.form.get("password", "").strip()
     
-    # Get the current search query and source if available
     search_query = request.form.get("search_query", "")
     search_source = request.form.get("search_source", "")
 
@@ -613,14 +536,12 @@ def login():
     pw_hash = hashlib.sha256(p.encode()).hexdigest()
 
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         user = User.query.filter_by(email=e, password=pw_hash).first()
 
         if user:
             session["user_id"] = user.id
             session["username"] = user.username
             
-            # If there was a search query, redirect back to search results
             if search_query:
                 redirect_url = f"/search?q={search_query}"
                 if search_source:
@@ -630,7 +551,6 @@ def login():
                 return jsonify(success=True, message="Logged in", redirect="/")
 
         return jsonify(success=False, message="Invalid credentials")
-        
     except Exception as db_error:
         print(f"Database error during login: {db_error}")
         return jsonify(success=False, message="Database error")
@@ -654,78 +574,128 @@ def upload_page_or_handler():
         return render_template("upload.html")
 
     if "user_id" not in session:
-        return jsonify(success=False, message="Please log in")
+        return jsonify(success=False, message="Please log in to upload books")
 
     f = request.files.get("file")
     title = request.form.get("title", "").strip()
+    author = request.form.get("author", "").strip() or "Unknown Author"
+    isbn = request.form.get("isbn", "").strip()
+    description = request.form.get("description", "").strip() or "No description provided"
 
     if not f or f.filename == "" or not allowed_file(f.filename):
-        return jsonify(success=False, message="Invalid file")
+        return jsonify(success=False, message="Please select a valid PDF or EPUB file")
+    
     if not title:
         return jsonify(success=False, message="Book title is required")
 
-    author = request.form.get("author", "").strip() or "Unknown Author"
-    isbn = request.form.get("isbn", "").strip()
-    desc = request.form.get("description", "").strip() or "No description"
-
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     name, ext = os.path.splitext(secure_filename(f.filename))
-    unique = f"{timestamp}_{name}{ext}"
-    path = os.path.join(app.config["UPLOAD_FOLDER"], unique)
+    unique_filename = f"{timestamp}_{name}{ext}"
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
 
     try:
-        f.save(path)
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
-        new_book = Book(title=title, author=author, isbn=isbn, description=desc,
-                       filename=unique, filepath=path, user_id=session["user_id"])
+        f.save(filepath)
+        print(f"✅ File saved to: {filepath}")
+
+        new_book = Book(
+            title=title,
+            author=author,
+            isbn=isbn,
+            description=description,
+            filename=unique_filename,
+            filepath=filepath,
+            user_id=session["user_id"]
+        )
+        
         db.session.add(new_book)
         db.session.commit()
+        
+        print(f"✅ Book '{title}' saved to database with ID: {new_book.id} for user: {session['user_id']}")
 
-        return jsonify(success=True, message="Book uploaded successfully!", redirect=url_for("my_books"))
+        return jsonify(
+            success=True, 
+            message="Book uploaded successfully!", 
+            redirect=url_for("my_books")
+        )
 
-    except Exception as err:
-        if os.path.exists(path):
-            os.remove(path)
-        print("Upload error:", err)
-        return jsonify(success=False, message="Upload failed")
+    except Exception as e:
+        print(f"❌ Upload error: {e}")
+        db.session.rollback()
+        
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            
+        return jsonify(success=False, message=f"Upload failed: {str(e)}")
 
 @app.route("/my-books")
 def my_books():
     if "user_id" not in session:
-        return render_template("mybooks.html", books=[], uploaded_books_count=0, 
-                              total_books_count=0, downloads_count=0, days_since_joined=0)
+        return render_template("mybooks.html", 
+                             books=[], 
+                             uploaded_books_count=0, 
+                             total_books_count=0, 
+                             downloads_count=0, 
+                             days_since_joined=0)
 
     user_id = session["user_id"]
+    
+    print(f"🔍 Fetching books for user_id: {user_id}")
 
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         user = User.query.get(user_id)
         if not user:
-            raise Exception("User not found")
+            print(f"❌ User with ID {user_id} not found!")
+            session.clear()
+            return redirect(url_for("home"))
 
-        book_list = [
-            dict(id=b.id, title=b.title, author=b.author, isbn=b.isbn or "",
-                description=b.description, filename=b.filename, filepath=b.filepath,
-                user_id=b.user_id, upload_date=b.upload_date, uploader=user.username, source="uploaded"
-            ) for b in user.books
-        ]
+        user_books = Book.query.filter_by(user_id=user_id).order_by(Book.upload_date.desc()).all()
+        print(f"📚 Found {len(user_books)} books for user: {user.username}")
+
+        book_list = []
+        for book in user_books:
+            book_dict = {
+                'id': book.id,
+                'title': book.title,
+                'author': book.author,
+                'isbn': book.isbn or "",
+                'description': book.description,
+                'filename': book.filename,
+                'filepath': book.filepath,
+                'user_id': book.user_id,
+                'upload_date': book.upload_date.strftime('%Y-%m-%d') if book.upload_date else '',
+                'uploader': user.username,
+                'source': "uploaded"
+            }
+            book_list.append(book_dict)
+            print(f"  - {book.title} by {book.author}")
 
         uploaded_books_count = len(book_list)
         total_books_count = Book.query.count()
         downloads_count = Download.query.filter_by(user_id=user_id).count()
-
         days_since_joined = (datetime.now() - user.created_at).days if user.created_at else 0
 
+        print(f"📊 Stats - Uploaded: {uploaded_books_count}, Total: {total_books_count}, Downloads: {downloads_count}")
+
         return render_template(
-            "mybooks.html", books=book_list, uploaded_books_count=uploaded_books_count,
-            total_books_count=total_books_count, downloads_count=downloads_count,
+            "mybooks.html", 
+            books=book_list,
+            uploaded_books_count=uploaded_books_count,
+            total_books_count=total_books_count,
+            downloads_count=downloads_count,
             days_since_joined=days_since_joined
         )
 
     except Exception as e:
-        print("my_books error:", e)
-        return render_template("mybooks.html", books=[], uploaded_books_count=0,
-                              total_books_count=0, downloads_count=0, days_since_joined=0)
+        print(f"❌ Error fetching user books: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return render_template("mybooks.html", 
+                             books=[], 
+                             uploaded_books_count=0,
+                             total_books_count=0, 
+                             downloads_count=0, 
+                             days_since_joined=0)
 
 @app.route("/search")
 def search():
@@ -748,7 +718,6 @@ def search():
             total_results=0
         )
 
-    # ✅ FIX: Enhanced API calls with better error handling
     google_results = []
     openlib_results = []
     gutendx_results = []
@@ -782,7 +751,6 @@ def search():
     except Exception as e:
         print(f"❌ NYT error: {e}")
 
-    # Local DB search (existing code continues...)
     local_results = []
     if not sources_selected or "uploaded" in sources_selected:
         try:
@@ -804,7 +772,6 @@ def search():
             print(f"❌ Local search error: {e}")
             local_results = []
 
-    # Merge and sort (existing code continues...)
     all_results = merge_results(local_results, google_results, openlib_results, gutendx_results, nyt_results)
     sorted_results = sort_results(all_results, sort_by)
 
@@ -829,7 +796,6 @@ def add_free_book():
         return jsonify(success=False, message="Invalid request")
 
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         new_book = Book(title=title, author=author, isbn="", description=description,
                        filename="", filepath=download_url, user_id=session["user_id"])
         db.session.add(new_book)
@@ -842,7 +808,6 @@ def add_free_book():
 @app.route("/download/<int:book_id>")
 def download_book(book_id):
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         book = Book.query.get(book_id)
 
         if not book:
@@ -871,7 +836,6 @@ def delete_book(book_id):
         return jsonify(success=False, message="Please log in")
 
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         book = Book.query.get(book_id)
 
         if not book:
@@ -883,7 +847,6 @@ def delete_book(book_id):
         if book.filepath and os.path.exists(book.filepath):
             os.remove(book.filepath)
 
-        # Delete related downloads
         Download.query.filter_by(book_id=book_id).delete()
         db.session.delete(book)
         db.session.commit()
@@ -894,8 +857,7 @@ def delete_book(book_id):
         print("delete_book error:", e)
         return jsonify(success=False, message=f"Error: {e}")
 
-# ═══════════ PASSWORD RESET ROUTES - FIXED FOR NO DUPLICATES ═══════════
-
+# Password Reset Routes
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     """Handle forgot password - email collection and reset link sending"""
@@ -908,7 +870,6 @@ def forgot_password():
         return render_template('forgot_password.html')
 
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         user = User.query.filter_by(email=email).first()
 
         if user:
@@ -954,7 +915,6 @@ def reset_password(token):
         pw_hash = hashlib.sha256(new_password.encode()).hexdigest()
         
         try:
-            # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
             user = User.query.get(token_data['user_id'])
             if user:
                 user.password = pw_hash
@@ -970,8 +930,7 @@ def reset_password(token):
     
     return render_template('reset_password.html')
 
-# ───────── READING ROUTES FOR PDF AND EPUB ─────────
-
+# Reading Routes for PDF and EPUB
 @app.route("/read/<int:book_id>")
 def read_book(book_id):
     """Display reader for EPUB or PDF books"""
@@ -979,7 +938,6 @@ def read_book(book_id):
         return redirect(url_for("home"))
     
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         book = Book.query.get(book_id)
 
         if not book:
@@ -990,7 +948,6 @@ def read_book(book_id):
             
         file_extension = book.filename.lower().split('.')[-1]
 
-        # Route to appropriate reader based on file type
         if file_extension == 'epub':
             return render_template("epub_reader.html", book_id=book_id, title=book.title)
         elif file_extension == 'pdf':
@@ -1006,7 +963,6 @@ def read_book(book_id):
 def serve_epub(book_id):
     """Serve EPUB files for the reader"""
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         book = Book.query.get(book_id)
 
         if not book:
@@ -1028,7 +984,6 @@ def serve_epub(book_id):
 def serve_pdf(book_id):
     """Serve PDF files for the viewer"""
     try:
-        # ✅ FIXED: Use SQLAlchemy models instead of sqlite3
         book = Book.query.get(book_id)
 
         if not book:
@@ -1051,7 +1006,7 @@ def test_email():
     try:
         msg = Message(
             "🧪 Test Email from BookFinder",
-            recipients=[app.config['MAIL_USERNAME']]  # Send to yourself
+            recipients=[app.config['MAIL_USERNAME']]
         )
         msg.body = """Hi!
 
@@ -1067,20 +1022,6 @@ BookFinder Test System"""
     except Exception as e:
         print(f"❌ Email error: {e}")
         return f"<h2>❌ Failed to send test email</h2><p>Error: {e}</p>"
-
-# ───────── REGISTER ADMIN BLUEPRINT ─────────
-
-try:
-    from admin.admin_routes import admin_bp
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    print("Admin blueprint registered successfully")
-except ImportError:
-    print("Admin blueprint not found - admin functionality will not be available")
-
-# ✅ ONE-TIME TABLE CREATION - Uncomment this ONCE to create tables
-create_tables()  # UNCOMMENTED FOR FIRST RUN
-
-# ───────── RUN ─────────
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))

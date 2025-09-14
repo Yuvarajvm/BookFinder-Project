@@ -1,115 +1,95 @@
 {% extends "admin/admin_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card text-white">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Users</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_users }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x"></i>
-                    </div>
-                </div>
-            </div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card card">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted small">Total Users</div>
+          <div class="fs-3 fw-bold">{{ stats.total_users or 0 }}</div>
         </div>
+        <div class="icon icon-primary"><i class="fas fa-users"></i></div>
+      </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card text-white">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Books</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_books }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-book fa-2x"></i>
-                    </div>
-                </div>
-            </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card card">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted small">Total Books</div>
+          <div class="fs-3 fw-bold">{{ stats.total_books or 0 }}</div>
         </div>
+        <div class="icon icon-success"><i class="fas fa-book"></i></div>
+      </div>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card text-white">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Downloads</div>
-                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_downloads }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-download fa-2x"></i>
-                    </div>
-                </div>
-            </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card card">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted small">Total Downloads</div>
+          <div class="fs-3 fw-bold">{{ stats.total_downloads or 0 }}</div>
         </div>
+        <div class="icon icon-info"><i class="fas fa-download"></i></div>
+      </div>
     </div>
+  </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold">Recent Downloads</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Book</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for download in stats.recent_downloads %}
-                            <tr>
-                                <td>{{ download[0] }}</td>
-                                <td>{{ download[1][:30] }}...</td>
-                                <td>{{ download[2] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card glass">
+      <div class="card-header bg-white"><strong>Recent Downloads</strong></div>
+      <div class="card-body">
+        {% if stats.recent_downloads %}
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead><tr><th>User</th><th>Book</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for d in stats.recent_downloads %}
+                  <tr>
+                    <td>{{ d or 'N/A' }}</td>
+                    <td>{{ d[1] or 'N/A' }}</td>
+                    <td>{{ d[2] or 'N/A' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted m-0">No recent downloads.</p>
+        {% endif %}
+      </div>
     </div>
+  </div>
 
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold">Recent Users</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Joined</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in stats.recent_users %}
-                            <tr>
-                                <td>{{ user[0] }}</td>
-                                <td>{{ user[1] }}</td>
-                                <td>{{ user[2] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  <div class="col-lg-6">
+    <div class="card glass">
+      <div class="card-header bg-white"><strong>Recent Users</strong></div>
+      <div class="card-body">
+        {% if stats.recent_users %}
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead><tr><th>Username</th><th>Email</th><th>Joined</th></tr></thead>
+              <tbody>
+                {% for u in stats.recent_users %}
+                  <tr>
+                    <td>{{ u.username or 'N/A' }}</td>
+                    <td>{{ u.email or 'N/A' }}</td>
+                    <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A' }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted m-0">No recent users.</p>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
