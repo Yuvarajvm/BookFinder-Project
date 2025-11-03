@@ -2,11 +2,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, current_app
 import os
 import hashlib
+from flask_login import current_user
 import requests
 import secrets
 import time
 import glob
 from datetime import datetime, timedelta
+import google.generativeai as genai
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
@@ -19,6 +21,9 @@ from models import User, Book, Download, Review, AdminUser, AdminLog
 
 load_dotenv()
 app = Flask(__name__)
+
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+genai.configure(api_key=GEMINI_API_KEY)
 
 # Database config
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -484,7 +489,7 @@ def home():
     except Exception as e:
         print("DB error:", e)
 
-    return render_template("home.html", google_books=featured, uploaded_books=uploaded)
+    return render_template("home.html", google_books=featured, uploaded_books=uploaded, user=current_user)
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -526,7 +531,7 @@ def register():
 def login():
     e = request.form.get("email", "").strip().lower()
     p = request.form.get("password", "").strip()
-    
+
     search_query = request.form.get("search_query", "")
     search_source = request.form.get("search_source", "")
 
@@ -1022,6 +1027,81 @@ BookFinder Test System"""
     except Exception as e:
         print(f"❌ Email error: {e}")
         return f"<h2>❌ Failed to send test email</h2><p>Error: {e}</p>"
+
+@app.template_filter('fmt_date')
+def fmt_date(value, out_fmt='%Y-%m-%d'):
+    if not value:
+        return 'N/A'
+    # If it's already a datetime
+    if hasattr(value, 'strftime'):
+        try:
+            return value.strftime(out_fmt)
+        except Exception:
+            return 'N/A'
+    # If it's a string, try common formats
+    s = str(value)
+    try:
+        # ISO 8601 support, including Z
+        if s.endswith('Z'):
+            s = s.replace('Z', '+00:00')
+        dt = datetime.fromisoformat(s)
+        return dt.strftime(out_fmt)
+    except Exception:
+        pass
+
+    for in_fmt in (
+        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%d',
+        '%d-%m-%Y %H:%M:%S',
+        '%d-%m-%Y',
+        '%m/%d/%Y %H:%M:%S',
+        '%m/%d/%Y',
+        '%Y-%m-%dT%H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S.%f',
+    ):
+        try:
+            return datetime.strptime(s, in_fmt).strftime(out_fmt)
+        except Exception:
+            continue
+    # Last‑resort: show first 10 chars (often YYYY-MM-DD)
+    return s[:10]
+
+# Chatbot route
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '')
+        
+        if not user_message:
+            return jsonify({'error': 'No message provided'}), 400
+        
+        # Initialize Gemini model
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Create context about BookFinder
+        context = """You are a helpful assistant for BookFinder, a comprehensive book discovery platform. 
+        BookFinder helps users search for books across multiple sources including Google Books, Open Library, 
+        and Project Gutenberg. Users can save books, get recommendations, and access free public domain books. 
+        Answer questions about books, reading suggestions, and help users find what they're looking for. 
+        Be friendly, concise, and helpful."""
+        
+        # Generate response
+        chat_session = model.start_chat(history=[])
+        response = chat_session.send_message(context + "\n\nUser: " + user_message)
+        
+        return jsonify({
+            'response': response.text,
+            'timestamp': datetime.now().strftime('%I:%M %p')
+        })
+    
+    except Exception as e:
+        app.logger.error(f"Chat error: {str(e)}")
+        return jsonify({'error': 'Failed to process your message. Please try again.'}), 500
+
+@app.route('/chatbot')
+def chatbot():
+    return render_template('chatbot.html')
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
