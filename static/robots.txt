@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/
+
+Sitemap: https://bookfinder-app-srb5.onrender.com/static/sitemap.xml

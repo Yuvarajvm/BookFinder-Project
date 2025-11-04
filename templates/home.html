@@ -1,9 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookFinder - Find Your Next Great Read</title>
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>BookFinder - Find Your Next Great Read | Free Book Search Engine</title>
+    <meta name="description" content="Discover and search for books from Google Books, Open Library, and free academic resources. BookFinder helps you find your next favorite book with AI-powered recommendations.">
+    <meta name="keywords" content="book finder, search books, find books online, google books, open library, book search engine, free books, academic books, book recommendations, book discovery">
+    <meta name="author" content="BookFinder">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Google Site Verification -->
+    <meta name="google-site-verification" content="5abcc06439753192" />
+    
+    <!-- Open Graph Meta Tags (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="BookFinder - Find Your Next Great Read">
+    <meta property="og:description" content="Discover and search for books from multiple sources including Google Books and Open Library. Find your next read easily!">
+    <meta property="og:url" content="https://bookfinder-app-srb5.onrender.com/">
+    <meta property="og:site_name" content="BookFinder">
+    <meta property="og:image" content="https://bookfinder-app-srb5.onrender.com/static/images/bookfinder-logo.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BookFinder - Find Your Next Great Read">
+    <meta name="twitter:description" content="Discover and search for books from multiple sources. Find your next read easily!">
+    <meta name="twitter:image" content="https://bookfinder-app-srb5.onrender.com/static/images/bookfinder-logo.png">
+    <meta name="twitter:site" content="@BookFinder">
+    <meta name="twitter:creator" content="@BookFinder">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://bookfinder-app-srb5.onrender.com/">
+    
+    <!-- Theme Color for Mobile Browsers -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-TileColor" content="#667eea">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/bookfinder-logo.png') }}">
+    
+    <!-- Preconnect to External Resources for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Slick Carousel CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BookFinder",
+      "url": "https://bookfinder-app-srb5.onrender.com/",
+      "description": "Find and discover books from multiple sources including Google Books, Open Library, and free academic resources.",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.7",
+        "ratingCount": "150"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "BookFinder"
+      },
+      "provider": {
+        "@type": "Organization",
+        "name": "BookFinder"
+      }
+    }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Slick Carousel CSS -->

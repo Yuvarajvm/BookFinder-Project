@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import google.generativeai as genai
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 # ✅ Import from centralized extensions and models
 from extensions import db, mail
@@ -1102,6 +1103,21 @@ def chat():
 @app.route('/chatbot')
 def chatbot():
     return render_template('chatbot.html')
+
+# Add this route for sitemap
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory('static', 'sitemap.xml', mimetype='application/xml')
+
+# Add this route for robots.txt
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory('static', 'robots.txt', mimetype='text/plain')
+
+# Serve Google verification file
+@app.route('/google5abcc06439753192.html')
+def google_verification():
+    return send_from_directory('.', 'google5abcc06439753192.html')
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
