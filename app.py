@@ -12,6 +12,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
+from werkzeug.security import generate_password_hash
 
 # ✅ Import from centralized extensions and models
 from extensions import db, mail
@@ -918,7 +919,7 @@ def reset_password(token):
             flash('Password must be at least 6 characters long!', 'warning')
             return render_template('reset_password.html')
         
-        pw_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        pw_hash = generate_password_hash(new_password)
         
         try:
             user = User.query.get(token_data['user_id'])
